@@ -607,6 +607,18 @@ html:root{--rN:#3d8bff;--rR:#f5c400;--rSR:#e8382c;--rGD:#ffcc33;--rSSR:#a855ff;-
 .ct-list{display:flex;flex-direction:column;gap:8px}
 .ct-tr{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:8px;border:1px solid var(--line,rgba(127,127,127,.25));border-radius:10px}
 </style>
+
+<style>
+.pduel{position:fixed;inset:0;z-index:300;display:grid;place-items:center;background:rgba(4,8,6,.72);padding:12px;touch-action:none}
+.du-box{width:min(560px,100%);background:#0c1712;border:1px solid rgba(232,184,74,.35);border-radius:14px;padding:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);position:relative;color:#f3efe3}
+.du-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 4px 8px;font-size:14px}
+.du-h small{opacity:.65;font-size:11px}.du-vs{font-weight:900;color:#e8b84a;letter-spacing:2px}
+.pduel canvas{display:block;width:100%;height:auto;border-radius:10px;cursor:crosshair;touch-action:none}
+.du-tip{font-size:12px;opacity:.8;text-align:center;padding:8px 4px 0}
+.du-r{min-height:30px;text-align:center;display:flex;gap:8px;justify-content:center;align-items:baseline;flex-wrap:wrap;padding-top:6px}
+.du-r b{font-size:22px;letter-spacing:1px}.du-r b.amb{color:#ffd166}.du-r b.good{color:#7ee2a8}.du-r b.bad{color:#ff8a80}.du-r small{font-size:12px;opacity:.85}
+.du-skip{display:block;margin:6px auto 0;opacity:.7}
+</style>
 <script>window.CPA_SUPA={url:"https://ehjamvrdrtiulncmkmnr.supabase.co",key:"sb_publishable_ZTeZRRnbQ1JhroPVwj-mYw_vEsagSjZ"};</script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a1d"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"></head><body>
 <meta charset="utf-8">
 <title>中職九局王牌</title>
@@ -3006,7 +3018,7 @@ function startPA(k) {
   if (G.aceOn[G.uIdx] > 0) { o[userBat ? "aceB" : "aceP"] = true; G.aceOn[G.uIdx]--; }
   const go = () => userAct(() => doPA(pitch, guess, o));
   if (S.opt && S.opt.timing === false) return go();
-  timingBar(userBat, pitch, q => { o[userBat ? "tqB" : "tqP"] = q.m; G.tq = q; go(); });
+  timingBar(userBat, pitch, q => { o[userBat ? "tqB" : "tqP"] = q.m; G.tq = q; if (q.take) o.take = q.take; if (q.sw) o.sw = q.sw; go(); if (q.after) q.after(G.last); });
 }
 
 /* ---------- 時機條 ----------
@@ -3059,7 +3071,7 @@ function tacCtrl(userBat) {
     <div class="tac-r"><span class="muted">${userBat ? "打擊策略" : "配球策略"}</span>${userBat ? seg("ba", BA, UI.ba || "std") : seg("pa", PA, UI.pa || "std")}
       <span class="dim tac-d">${esc((userBat ? BA[UI.ba || "std"] : PA[UI.pa || "std"]).d)}</span></div>
     <div class="tac-r"><span class="tag">球探：${esc(opp.n)} 偏好「${sty.n}」</span>${key ? `<span class="tag amb">關鍵時刻・王牌值 ×1.5</span>` : ""}
-      <label class="tgl"><input type="checkbox" data-a="tgTiming" ${S.opt && S.opt.timing === false ? "" : "checked"}> 時機挑戰</label></div>
+      <label class="tgl"><input type="checkbox" data-a="tgTiming" ${S.opt && S.opt.timing === false ? "" : "checked"}> 打球畫面</label></div>
     <div class="ace-r"><span class="ace-l">⚡ 王牌時刻</span><div class="bar ace-b"><i style="width:${on ? 100 : ace}%"></i></div>
       ${on ? `<span class="tag amb">發動中・剩 ${on} 打席</span>` : `<button class="btn sm ${ace >= 100 ? "pri glow" : ""}" data-a="aceGo" ${ace >= 100 ? "" : "disabled"}>${ace >= 100 ? "發動！" : ace + "%"}</button>`}</div></div>`;
 }
@@ -8701,6 +8713,156 @@ ofrCopy = async function (text, ok) {
   return false;
 };
 ACT.cpShare = () => navigator.share({ text: UI.cpTxt || "" }).then(() => closeModal()).catch(() => { });
+
+/* =========================================================
+   v48 打球畫面：捕手後方視角的投打對決（canvas）
+   ========================================================= */
+const DU = { W: 560, H: 440 };
+function duelGeo(W, H) {
+  const zw = W * .2, zh = W * .25, zx = W / 2 - zw / 2, zy = H * .62 - zh / 2;
+  return { zw, zh, zx, zy, cx: W / 2, cy: zy + zh / 2, mx: W / 2 + 6, my: H * .27 };
+}
+/* 球場背景＋好球帶＋投手、打者剪影 */
+function duelBg(g, W, H, G0, o) {
+  const sky = g.createLinearGradient(0, 0, 0, H * .35); sky.addColorStop(0, "#0b1d33"); sky.addColorStop(1, "#173a2a");
+  g.fillStyle = sky; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#1f5a33"; g.beginPath(); g.moveTo(0, H * .33); g.quadraticCurveTo(W / 2, H * .22, W, H * .33); g.lineTo(W, H); g.lineTo(0, H); g.fill();
+  for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? "rgba(255,255,255,.025)" : "rgba(0,0,0,.04)"; g.fillRect(0, H * .33 + i * (H * .67 / 8), W, H * .67 / 8); }
+  g.fillStyle = "#a8794a"; g.beginPath(); g.ellipse(G0.mx, G0.my + 18, W * .09, H * .025, 0, 0, Math.PI * 2); g.fill();          // 投手丘
+  g.beginPath(); g.moveTo(W * .26, H); g.lineTo(W * .4, H * .78); g.lineTo(W * .6, H * .78); g.lineTo(W * .74, H); g.fill();      // 本壘區
+  g.fillStyle = "#f4f0e6"; g.beginPath(); g.moveTo(W * .46, H * .93); g.lineTo(W * .54, H * .93); g.lineTo(W * .54, H * .96); g.lineTo(W * .5, H * .985); g.lineTo(W * .46, H * .96); g.fill();
+  // 投手剪影
+  g.fillStyle = o.pc || "#c8102e"; g.beginPath(); g.arc(G0.mx, G0.my - 18, 6, 0, Math.PI * 2); g.fill(); g.fillRect(G0.mx - 6, G0.my - 12, 12, 26);
+  // 打者剪影（右打站在左邊、左打站在右邊）
+  const bx = o.lh ? W * .69 : W * .31;
+  g.fillStyle = "rgba(10,14,20,.88)"; g.beginPath(); g.arc(bx, H * .52, 17, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.ellipse(bx, H * .74, 30, 78, 0, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = "rgba(10,14,20,.88)"; g.lineWidth = 7; g.beginPath(); g.moveTo(bx + (o.lh ? -14 : 14), H * .56); g.lineTo(bx + (o.lh ? 10 : -10), H * .38); g.stroke();
+  // 好球帶
+  g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 1.5; g.setLineDash([5, 4]); g.strokeRect(G0.zx, G0.zy, G0.zw, G0.zh); g.setLineDash([]);
+  g.strokeStyle = "rgba(255,255,255,.12)"; for (let i = 1; i < 3; i++) { g.beginPath(); g.moveTo(G0.zx + G0.zw * i / 3, G0.zy); g.lineTo(G0.zx + G0.zw * i / 3, G0.zy + G0.zh); g.stroke(); g.beginPath(); g.moveTo(G0.zx, G0.zy + G0.zh * i / 3); g.lineTo(G0.zx + G0.zw, G0.zy + G0.zh * i / 3); g.stroke(); }
+}
+const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+const RES_FLY = { HR: [1.5, .95], T: [1.05, .85], D: [.9, .7], S: [.55, .35], FO: [.75, 1.1], SF: [.75, 1.05], LO: [.55, .3], PO: [.25, 1.3], GO: [.32, .05], DP: [.3, .05] };
+
+timingBar = function (userBat, pitch, done) {
+  const p = curP(), b = curB(), bs = batSide(), fs = fldSide();
+  const el = document.createElement("div"); el.className = "pduel"; UI.tb = true;
+  const W = DU.W, H = DU.H, G0 = duelGeo(W, H);
+  const brk = pitch !== "FB", pName = brk ? pick(p.rep && p.rep.length ? p.rep : ["滑球"]) : "直球";
+  const kmh = brk ? Math.round(p.kmh * (.82 + Math.random() * .06)) : Math.round(p.kmh * (0.97 + .03 * fatigueF(p))) - ri(0, 3);
+  const dur = clamp(1150 - (kmh - 125) * 14, 560, 1250) * (brk ? 1.08 : 1);
+  el.innerHTML = `<div class="du-box"><div class="du-h"><span><b>${esc(b.n)}</b> <small>${esc(bs.ab)}・打擊</small></span><span class="du-vs">VS</span><span><b>${esc(p.n)}</b> <small>${esc(fs.ab)}・投手</small></span></div>
+    <canvas width="${W}" height="${H}"></canvas>
+    <div class="du-tip">${userBat ? "移動擊球圈對準來球，<b>點擊／空白鍵</b> 揮棒（壞球可以不揮）" : `投 <b>${esc(pName)}</b>：移動準星選進壘點，在圓圈縮到最小時 <b>點擊／空白鍵</b> 投出`}</div>
+    <div class="du-r"></div><button class="btn sm ghost du-skip" type="button">跳過動畫</button></div>`;
+  document.body.appendChild(el);
+  const cv = el.querySelector("canvas"), g = cv.getContext("2d"), rEl = el.querySelector(".du-r");
+  const o = { pc: fs.c, lh: (b.bats || "R") === "L" };
+  let mx = G0.cx, my = G0.cy, phase = userBat ? "wait" : "aim", t0 = 0, raf, ended = false, swingAt = null, swingPos = null, release = 0;
+  // 擊球圈大小看打者接觸力；投手準星誤差看控球
+  const hr = G0.zw * (.17 + b.con / 520);
+  const toCanvas = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height]; };
+  // 來球的落點
+  let tx, ty, bx0 = 0, by0 = 0;
+  const setTarget = (ax, ay, sc) => { tx = ax + gauss() * sc; ty = ay + gauss() * sc; };
+  if (userBat) {
+    const inZ = rnd() < .5 + p.ctl / 300;
+    if (inZ) setTarget(G0.zx + G0.zw * (.15 + Math.random() * .7), G0.zy + G0.zh * (.15 + Math.random() * .7), 4);
+    else { const s = Math.floor(Math.random() * 4); setTarget(s === 0 ? G0.zx - G0.zw * .22 : s === 1 ? G0.zx + G0.zw * 1.22 : G0.zx + G0.zw * Math.random(), s === 2 ? G0.zy - G0.zh * .18 : s === 3 ? G0.zy + G0.zh * 1.2 : G0.zy + G0.zh * Math.random(), 5); }
+    if (brk) { bx0 = (Math.random() < .5 ? -1 : 1) * G0.zw * (.25 + p.brk / 300); by0 = -G0.zh * (.15 + Math.random() * .2); }
+    setTimeout(() => { if (!ended) { phase = "pitch"; t0 = performance.now(); } }, 650);
+  }
+  const inZone = (x, y) => x >= G0.zx - 4 && x <= G0.zx + G0.zw + 4 && y >= G0.zy - 4 && y <= G0.zy + G0.zh + 4;
+  const ballAt = u => { // 0 出手 → 1 進壘
+    const e = brk ? (u < .55 ? 0 : Math.pow((u - .55) / .45, 1.6)) : 0;
+    const ax = G0.mx + 8 + (tx + bx0 * (1 - e) - G0.mx - 8) * u, ay = G0.my - 10 + (ty + by0 * (1 - e) - G0.my + 10) * u - Math.sin(u * Math.PI) * 18;
+    return [ax, ay, 2.5 + 9 * u * u];
+  };
+  const drawBall = (x, y, r) => { g.fillStyle = "rgba(0,0,0,.25)"; g.beginPath(); g.ellipse(x, y + r * 1.6, r, r * .35, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#fbfaf5"; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); g.strokeStyle = "#c8102e"; g.lineWidth = Math.max(1, r / 6); g.beginPath(); g.arc(x - r * .6, y, r * .8, -1, 1); g.stroke(); g.beginPath(); g.arc(x + r * .6, y, r * .8, Math.PI - 1, Math.PI + 1); g.stroke(); };
+  const pulse = ms => .5 + .5 * Math.cos(ms / 520 * Math.PI * 2);   // 1 = 最大，0 = 最小
+  let aimT = 0;
+  const frame = now => {
+    duelBg(g, W, H, G0, o);
+    if (userBat) {
+      g.strokeStyle = swingAt ? "rgba(255,210,80,.95)" : "rgba(255,210,80,.75)"; g.lineWidth = 3; g.beginPath(); g.arc(swingPos ? swingPos[0] : mx, swingPos ? swingPos[1] : my, hr, 0, Math.PI * 2); g.stroke();
+      g.fillStyle = "rgba(255,210,80,.14)"; g.fill();
+      g.fillStyle = "rgba(255,210,80,.9)"; g.beginPath(); g.arc(swingPos ? swingPos[0] : mx, swingPos ? swingPos[1] : my, 3, 0, Math.PI * 2); g.fill();
+      if (phase === "pitch") { const u = (now - t0) / dur; if (u >= 1.18) return finish(); const [x, y, r] = ballAt(Math.min(u, 1.12)); drawBall(x, y, r); }
+      else if (phase === "wait") { g.fillStyle = "rgba(255,255,255,.8)"; g.font = "bold 14px system-ui"; g.textAlign = "center"; g.fillText("投手準備中…", W / 2, H * .14); }
+    } else {
+      if (phase === "aim") { aimT = now - t0; const k = pulse(aimT), rr = 10 + 38 * k;
+        g.strokeStyle = k < .12 ? "rgba(120,255,160,.95)" : "rgba(255,255,255,.85)"; g.lineWidth = 2.5; g.beginPath(); g.arc(mx, my, rr, 0, Math.PI * 2); g.stroke();
+        g.beginPath(); g.moveTo(mx - 8, my); g.lineTo(mx + 8, my); g.moveTo(mx, my - 8); g.lineTo(mx, my + 8); g.stroke(); }
+      else if (phase === "pitch") { const u = (now - t0) / dur; const [x, y, r] = ballAt(Math.min(u, 1)); drawBall(x, y, r); if (u >= 1.05) return finish(); }
+    }
+    raf = requestAnimationFrame(frame);
+  };
+  const act = () => {
+    if (ended) return;
+    if (userBat) { if (phase !== "pitch" || swingAt != null) return; swingAt = performance.now(); swingPos = [mx, my]; setTimeout(finish, 120); }
+    else if (phase === "aim") {
+      const k = pulse(aimT), sc = (3 + 22 * k) * (1.5 - p.ctl / 100) * (1.1 - fatigueF(p) * .1);
+      release = 1 - k; setTarget(mx, my, sc); phase = "pitch"; t0 = performance.now();
+      if (brk) { bx0 = (o.lh ? 1 : -1) * G0.zw * (.2 + p.brk / 350); by0 = -G0.zh * .15; }
+    }
+  };
+  const finish = () => {
+    if (ended) return; ended = true; cancelAnimationFrame(raf); off();
+    let q;
+    if (userBat) {
+      const inz = inZone(tx, ty);
+      if (swingAt == null) q = inz ? { n: "站著不動", m: .92, take: "strike" } : { n: "好眼力", m: 1, take: "ball" };
+      else {
+        const dt = swingAt - (t0 + dur), d = Math.hypot(swingPos[0] - tx, swingPos[1] - ty) / hr;
+        const ts = Math.max(0, 1 - Math.abs(dt) / 130), ps = Math.max(0, 1 - d), s = ts * ps;
+        const when = dt < -60 ? "太早" : dt > 60 ? "太晚" : "";
+        if (d > 1 || ts <= 0) q = { n: "揮空", m: .82, sw: "whiff", sub: when || (d > 1 ? "沒對準" : "") };
+        else if (s > .55) q = { n: "PERFECT", m: 1.3, sw: "hit" };
+        else if (s > .3) q = { n: "GOOD", m: 1.12, sw: "hit", sub: when };
+        else q = { n: "擦到", m: .96, sub: when || "沒打正" };
+        if (!inz && q.sw !== "hit") q.sub = (q.sub ? q.sub + "・" : "") + "追打壞球";
+      }
+    } else {
+      const inz = inZone(tx, ty), ex = Math.min(Math.abs(tx - G0.cx) / (G0.zw / 2), Math.abs(ty - G0.cy) / (G0.zh / 2));
+      const edge = inz && Math.max(Math.abs(tx - G0.cx) / (G0.zw / 2), Math.abs(ty - G0.cy) / (G0.zh / 2)) > .62;
+      if (!inz) { const chase = rnd() < .5 - b.eye / 250 + release * .15; q = chase ? { n: "引誘成功", m: 1.12, sw: "whiff" } : { n: "壞球", m: .95, take: "ball" }; }
+      else q = edge ? { n: release > .85 ? "PERFECT" : "邊角好球", m: release > .85 ? 1.28 : 1.15 } : { n: release > .85 ? "GOOD" : "紅中", m: release > .85 ? 1.05 : .9, sub: "球進了正中間" };
+      void ex;
+    }
+    rEl.innerHTML = `<b class="${/PERFECT|引誘|邊角|好眼力/.test(q.n) ? "amb" : /GOOD/.test(q.n) ? "good" : /揮空|紅中|壞球|站著/.test(q.n) ? "bad" : ""}">${q.n}</b>${q.sub ? `<small>${esc(q.sub)}</small>` : ""}<small class="dim">${esc(pName)}・${kmh}km/h</small>`;
+    q.after = last => afterAnim(last, q);
+    setTimeout(() => done(q), 380);
+  };
+  // 結果動畫：球飛出去
+  const afterAnim = (last, q) => {
+    if (!last) return close();
+    const res = last.res, sub = last.sub, big = bigLabel(res, sub, last.runs);
+    const fly = RES_FLY[res] || RES_FLY[sub] || null, dir = (Math.random() - .5) * 1.4, ts = performance.now();
+    const show = () => { rEl.innerHTML = `<b class="${["S", "D", "T", "HR", "BB", "HBP"].includes(res) === !!last.ub ? "amb" : "bad"}">${esc(big)}</b>${last.runs ? `<small>${last.runs} 分打回來！</small>` : ""}`; };
+    show();
+    const ani = now => {
+      const u = Math.min(1, (now - ts) / 1100);
+      duelBg(g, W, H, G0, o);
+      if (fly) { const [dist, hgt] = fly, sx = W / 2, sy = H * .9, ex = sx + dir * W * .45 * Math.min(1, dist), ey = H * (.9 - .62 * Math.min(1.25, dist));
+        const x = sx + (ex - sx) * u, y = sy + (ey - sy) * u - Math.sin(u * Math.PI) * H * .35 * hgt, r = 10 - 7 * u;
+        if (y > -20) drawBall(x, y, Math.max(2, r)); }
+      else if (res === "K") { g.fillStyle = "rgba(255,255,255,.9)"; g.font = "bold 56px system-ui"; g.textAlign = "center"; g.globalAlpha = Math.min(1, u * 3); g.fillText("K", W / 2, H * .45); g.globalAlpha = 1; }
+      if (u < 1) raf = requestAnimationFrame(ani); else setTimeout(close, 650);
+    };
+    raf = requestAnimationFrame(ani);
+  };
+  const close = () => { cancelAnimationFrame(raf); el.remove(); UI.tb = false; };
+  const mv = e => { [mx, my] = toCanvas(e); mx = clamp(mx, G0.zx - G0.zw * .6, G0.zx + G0.zw * 1.6); my = clamp(my, G0.zy - G0.zh * .5, G0.zy + G0.zh * 1.5); };
+  const pd = e => { if (e.target.closest(".du-skip")) return; e.preventDefault(); if (e.pointerType !== "mouse") mv(e); act(); };
+  const key = e => { if (e.code === "Space" || e.key === "Enter") { e.preventDefault(); act(); }
+    const st = 8; if (e.key === "ArrowLeft") mx -= st; if (e.key === "ArrowRight") mx += st; if (e.key === "ArrowUp") my -= st; if (e.key === "ArrowDown") my += st; };
+  const off = () => { cv.removeEventListener("pointermove", mv); cv.removeEventListener("pointerdown", pd); document.removeEventListener("keydown", key); };
+  cv.addEventListener("pointermove", mv); cv.addEventListener("pointerdown", pd); document.addEventListener("keydown", key);
+  el.querySelector(".du-skip").addEventListener("click", () => { if (!ended) finish(); else close(); });
+  t0 = performance.now(); raf = requestAnimationFrame(frame);
+};
 </script>
 
 <script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script></body></html>
