@@ -601,7 +601,13 @@ html:root{--rN:#3d8bff;--rR:#f5c400;--rSR:#e8382c;--rGD:#ffcc33;--rSSR:#a855ff;-
 .ot-pk{position:relative}.ot-pk.on::after{content:"✓";position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:var(--acc,#e8b84a);color:#111;font-weight:800;font-size:13px;display:grid;place-items:center}
 .ot-pk.on{border-color:var(--acc,#e8b84a);background:color-mix(in srgb,var(--acc,#e8b84a) 14%,transparent)}
 </style>
-<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a1d"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"></head><body>
+
+<style>
+.ofr-off summary{cursor:pointer;padding:4px 0}
+.ct-list{display:flex;flex-direction:column;gap:8px}
+.ct-tr{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:8px;border:1px solid var(--line,rgba(127,127,127,.25));border-radius:10px}
+</style>
+<script>window.CPA_SUPA={url:"https://ehjamvrdrtiulncmkmnr.supabase.co",key:"sb_publishable_ZTeZRRnbQ1JhroPVwj-mYw_vEsagSjZ"};</script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a1d"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"></head><body>
 <meta charset="utf-8">
 <title>中職九局王牌</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -8346,7 +8352,7 @@ function ofrPanel() {
   const L = Object.values(S.ofr || {}).sort((a, b) => (b.pw || 0) - (a.pw || 0));
   setTimeout(async () => { const t = $("#ofrMine"); if (!t) return; try { const c = await ofrMine(); if ($("#ofrMine") === t) { t.value = ofrMsg(c, ofrNm()); const k = $("#ofrLen"); if (k) k.textContent = `${c.length} 字`; } } catch (e) { t.value = "產生球隊碼失敗：" + (e && e.message || e); } }, 0);
   const card = o => { const t = TEAMS[o.team] || TEAMS[0];
-    return `<div class="fr-card" style="--tc:${t.c}"><div class="row" style="gap:8px">${crest(t, "l")}<div><b>${esc(o.n)}</b><small class="dim">${esc(t.n)}・防守戰力 <b>${o.pw || "—"}</b>・陣容 ${frWhen(new Date(o.at).toISOString())}</small>
+    return `<div class="fr-card" style="--tc:${t.c}"><div class="row" style="gap:8px">${crest(t, "l")}<div><b>${esc(o.n)}</b>${o.cloud ? ` <span class="tag ok">線上・自動同步</span>` : ""}<small class="dim">${esc(t.n)}・防守戰力 <b>${o.pw || "—"}</b>・陣容 ${frWhen(new Date(o.at).toISOString())}</small>
       ${otPend(o.id)}<small class="dim">你挑戰他 ${o.w || 0} 勝 ${o.l || 0} 敗${o.t ? ` ${o.t} 和` : ""}${o.last ? `・上一場 ${o.last.us}:${o.last.th}` : ""}</small></div></div>
       <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm pri" data-a="ofrGo" data-id="${o.id}" data-m="manual">挑戰・親自指揮</button><button class="btn sm" data-a="ofrGo" data-id="${o.id}" data-m="sim">挑戰・快速模擬</button>
       <button class="btn sm" data-a="otNew" data-id="${o.id}">🔁 送卡／交換</button><button class="btn sm ghost" data-a="ofrFw" data-id="${o.id}" title="把他的球隊碼轉傳給別人">分享給別人</button><button class="btn sm ghost" data-a="ofrDel" data-id="${o.id}">刪除</button></div></div>`; };
@@ -8504,6 +8510,182 @@ Object.assign(ACT, {
 });
 /* 貼上就自動處理 */
 document.addEventListener("input", e => { if (e.target.id !== "ofrIn") return; const v = e.target.value.replace(/\s+/g, ""); if (OFR_RE.test(v) || OT_RE.test(v)) setTimeout(() => ofrAdd(), 0); });
+
+/* =========================================================
+   v47 線上好友（Supabase REST）
+   ========================================================= */
+const SB = window.CPA_SUPA || null, CT_POLL = 30e3;
+const ctS = () => { S.cloud = S.cloud || {}; S.ctOut = S.ctOut || {}; return S.cloud; };
+const ctUrl = code => `${OFR_URL}${OFR_URL.includes("?") ? "&" : "?"}f=${code}`;
+const CT = { busy: 0, last: 0, err: "", inT: [], push: "" };
+async function ctAuth() {
+  const C = ctS();
+  if (C.at && C.exp > Date.now() / 1000 + 120) return C;
+  const post = (p, b) => fetch(SB.url + "/auth/v1/" + p, { method: "POST", headers: { apikey: SB.key, "Content-Type": "application/json" }, body: JSON.stringify(b) });
+  let r = C.rt ? await post("token?grant_type=refresh_token", { refresh_token: C.rt }) : null;
+  if (!r || !r.ok) { if (C.uid && r && r.status !== 400 && r.status !== 401) throw new Error("連線失敗（" + r.status + "）"); r = await post("signup", { data: {} }); }
+  if (!r.ok) throw new Error("登入失敗（" + r.status + "）");
+  const j = await r.json();
+  if (C.uid && j.user && j.user.id !== C.uid) { S.ofr && Object.values(S.ofr).forEach(o => { if (o.cloud) delete S.ofr[o.id]; }); }
+  Object.assign(C, { at: j.access_token, rt: j.refresh_token, exp: j.expires_at || Math.floor(Date.now() / 1000) + (j.expires_in || 3600), uid: j.user && j.user.id });
+  save(); return C;
+}
+async function sb(path, o = {}) {
+  const C = await ctAuth();
+  const r = await fetch(SB.url + "/rest/v1/" + path, { method: o.m || "GET", headers: { apikey: SB.key, Authorization: "Bearer " + C.at, "Content-Type": "application/json", Prefer: o.prefer || "return=representation" }, body: o.b != null ? JSON.stringify(o.b) : undefined });
+  const t = await r.text(); let j = null; try { j = t ? JSON.parse(t) : null; } catch (e) { }
+  if (!r.ok) { const e = new Error((j && (j.message || j.hint)) || ("HTTP " + r.status)); e.status = r.status; throw e; }
+  return j;
+}
+const rpc = (fn, b) => sb("rpc/" + fn, { m: "POST", b });
+/* 上傳我的名片（陣容或可交換卡有變才傳） */
+async function ctPush(force) {
+  const s = frSnap(), key = [s.sh, ofrNm(), otKey(), S.team].join("|");
+  if (!force && CT.push === key) return;
+  const C = ctS();
+  await sb("players?on_conflict=id", { m: "POST", prefer: "resolution=merge-duplicates,return=minimal",
+    b: { id: C.uid, code: ofrId(), name: ofrNm(), team: S.team, pw: s.pw | 0, side: s.side, cust: s.cust, tl: otList(), updated_at: new Date().toISOString() } });
+  CT.push = key;
+}
+async function ctAdd(code) {
+  code = String(code || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!/^[A-Z0-9]{6,12}$/.test(code)) return toast("好友碼格式不對（6～12 個英文或數字）", 1);
+  if (code === ofrId()) return toast("這是你自己的好友碼喔", 1);
+  try { await ctAuth(); await ctPush(); await rpc("add_friend", { fcode: code }); }
+  catch (e) { return toast(/no such code/.test(e.message) ? "找不到這個好友碼（對方要先打開過網站版的好友頁）" : /too many/.test(e.message) ? "好友最多 100 位" : "加好友失敗：" + e.message, 1); }
+  await ctSync(1); const o = S.ofr && S.ofr[code];
+  toast(o ? `已加 ${o.n} 為好友！可以馬上挑戰或交易` : "已加好友");
+}
+async function ctDel(o) {
+  const C = ctS();
+  try { await sb(`friends?or=(and(a.eq.${C.uid},b.eq.${o.uid}),and(a.eq.${o.uid},b.eq.${C.uid}))`, { m: "DELETE", prefer: "return=minimal" }); } catch (e) { return toast("刪除失敗：" + e.message, 1); }
+  delete S.ofr[o.id]; save(); render();
+}
+/* 同步：好友名單＋陣容、交易狀態 */
+async function ctSync(force) {
+  if (!SB || !S || S.team == null || CT.busy) return;
+  if (!force && Date.now() - CT.last < 10e3) return;
+  CT.busy = 1;
+  try {
+    const C = await ctAuth(); await ctPush();
+    // 邀請連結帶來的好友碼
+    let pf = null; try { pf = sessionStorage.getItem("cpaF"); } catch (e) { }
+    if (pf) { try { sessionStorage.removeItem("cpaF"); } catch (e) { } if (pf !== ofrId()) { try { await rpc("add_friend", { fcode: pf }); UI.ctNew = pf; } catch (e) { toast("邀請連結的好友碼找不到", 1); } } }
+    const fr = await sb(`friends?select=b&a=eq.${C.uid}`) || [];
+    const ids = fr.map(x => x.b);
+    const ps = ids.length ? await sb(`players?select=id,code,name,team,pw,side,cust,tl,updated_at&id=in.(${ids.join(",")})`) || [] : [];
+    S.ofr = S.ofr || {};
+    const seen = new Set();
+    ps.forEach(p => { const id = p.code; seen.add(id); const old = S.ofr[id] || {};
+      if (!p.side) return;
+      S.ofr[id] = { ...old, id, uid: p.id, cloud: 1, n: frName({ n: p.name }), team: clamp(+p.team || 0, 0, TEAMS.length - 1), side: p.side, cust: p.cust || {}, pw: clamp(+p.pw || 0, 0, 300), at: Date.parse(p.updated_at) || Date.now(), tl: otClean(p.tl), w: old.w || 0, l: old.l || 0, t: old.t || 0 }; });
+    Object.values(S.ofr).forEach(o => { if (o.cloud && !seen.has(o.id)) delete S.ofr[o.id]; });
+    if (UI.ctNew && S.ofr[UI.ctNew]) { toast(`已透過邀請連結加 ${S.ofr[UI.ctNew].n} 為好友！`); UI.ctNew = null; }
+    // 交易
+    const since = new Date(Date.now() - 14 * 864e5).toISOString();
+    const tr = await sb(`trades?select=*&or=(from_id.eq.${C.uid},to_id.eq.${C.uid})&updated_at=gt.${since}&order=created_at.desc&limit=200`) || [];
+    CT.inT = tr.filter(t => t.to_id === C.uid && t.status === "pending");
+    for (const t of tr) {
+      const x = S.ctOut[t.id]; if (!x || t.from_id !== C.uid) continue;
+      x.st = t.status;
+      if (t.status === "accepted") {
+        if ((await rpc("trade_step", { tid: t.id, act: "claim", payload: null })) === "ok") {
+          const c = trUnpack(t.got); delete S.ctOut[t.id];
+          toast(c ? `交換完成！${PDB[c.pid].n} 已經放進背包` : "交換完成，但對方的卡片資料有誤", !c);
+        }
+      } else if (t.status === "declined" || t.status === "cancelled") {
+        const c = trUnpack(x.card); delete S.ctOut[t.id];
+        toast(`${t.status === "declined" ? "對方拒絕了交易" : "交易已取消"}，${c ? PDB[c.pid].n : "卡片"} 回到背包`);
+      } else if (t.status === "done") { delete S.ctOut[t.id]; if (!x.want) toast(`對方收下了你送的 ${PDB[x.card.pid] ? PDB[x.card.pid].n : "卡"}`); }
+    }
+    CT.err = ""; CT.last = Date.now(); save();
+  } catch (e) { CT.err = e.message || String(e); }
+  finally { CT.busy = 0; if (UI.view === "friends" && !$("#modal") && !$("#cfm")) render(); }
+}
+async function ctMake(o, c, w) {
+  const C = await ctAuth(), pk = trPack(c);
+  let r; try { r = await sb("trades", { m: "POST", b: { from_id: C.uid, to_id: o.uid, give: pk, want: w ? { u: w.u, pid: w.pid } : null } }); }
+  catch (e) { return toast("送出失敗：" + (/row-level/.test(e.message) ? "對方不是你的好友，或進行中的交易太多（最多 20 筆）" : e.message), 1); }
+  const t = r && r[0]; if (!t) return toast("送出失敗", 1);
+  delete S.cards[c.uid]; S.ctOut[t.id] = { to: o.id, card: pk, want: w ? { u: w.u, pid: w.pid } : null, at: Date.now() };
+  save(); closeModal(); render();
+  toast(w ? `已送出交換提議：${PDB[c.pid].n} ⇄ ${PDB[w.pid].n}，對方接受就會自動完成` : `已把 ${PDB[c.pid].n} 送給 ${o.n}`);
+}
+async function ctAccept(id) {
+  const t = CT.inT.find(x => x.id === id); if (!t) return;
+  let my = null;
+  if (t.want) { my = S.cards[t.want.u]; if (!my || my.pid !== t.want.pid || !trOk(my)) return toast("對方想要的卡不在背包、在陣容中或上鎖，沒辦法交換", 1); }
+  let r; try { r = await rpc("trade_step", { tid: id, act: "accept", payload: my ? trPack(my) : null }); } catch (e) { return toast("失敗：" + e.message, 1); }
+  if (r !== "ok") { toast("這筆交易已經失效（對方取消了）", 1); return ctSync(1); }
+  if (my) delete S.cards[my.uid];
+  const c = trUnpack(t.give); CT.inT = CT.inT.filter(x => x.id !== id); save(); closeModal(); render();
+  toast(c ? `${PDB[c.pid].n} 已經放進背包！` : "卡片資料有誤", !c);
+}
+async function ctDecline(id) {
+  try { await rpc("trade_step", { tid: id, act: "decline", payload: null }); } catch (e) { return toast("失敗：" + e.message, 1); }
+  CT.inT = CT.inT.filter(x => x.id !== id); render(); toast("已拒絕");
+}
+async function ctCancel(id) {
+  const x = S.ctOut[id]; if (!x) return;
+  let r; try { r = await rpc("trade_step", { tid: id, act: "cancel", payload: null }); } catch (e) { return toast("失敗：" + e.message, 1); }
+  if (r !== "ok") { toast("對方已經處理這筆交易了，正在同步…"); return ctSync(1); }
+  const c = trUnpack(x.card); delete S.ctOut[id]; save(); render(); toast(`已取消，${c ? PDB[c.pid].n : "卡片"} 回到背包`);
+}
+function ctPanel() {
+  const C = ctS(), code = ofrId();
+  setTimeout(() => ctSync(), 0);
+  const ago = CT.last ? Math.round((Date.now() - CT.last) / 1000) : null;
+  const st = CT.err ? `<span class="bad">連線問題：${esc(CT.err)}</span>` : CT.last ? `已連線・${ago < 5 ? "剛剛" : ago + " 秒前"}同步` : "連線中…";
+  const fn = uid => { const o = Object.values(S.ofr || {}).find(o => o.uid === uid); return o ? o.n : "好友"; };
+  const inc = CT.inT.map(t => { const g = otShow(t.give, "ct" + t.id), my = t.want ? S.cards[t.want.u] : null;
+    return `<div class="ct-tr"><div class="row" style="gap:6px;align-items:center">${cardHTML(g, { size: "xs" })}${t.want ? `<span style="font-size:20px">⇄</span>${my ? cardHTML(my, { size: "xs" }) : `<span class="dim">（${esc(PDB[t.want.pid] ? PDB[t.want.pid].n : "?")} 已不在背包）</span>`}` : ""}</div>
+      <div style="flex:1;min-width:160px"><b>${esc(fn(t.from_id))}</b> ${t.want ? `想用 <b>${esc(PDB[t.give.pid].n)}</b> 換你的 <b>${esc(PDB[t.want.pid] ? PDB[t.want.pid].n : "?")}</b>` : `送你一張 <b>${esc(PDB[t.give.pid].n)}</b>`}
+      <div class="row" style="gap:6px;margin-top:6px"><button class="btn sm pri" data-a="ctAcc" data-id="${t.id}">${t.want ? "接受交換" : "收下"}</button><button class="btn sm ghost" data-a="ctDec" data-id="${t.id}">${t.want ? "不換" : "退回"}</button></div></div></div>`; }).join("");
+  return `<div class="panel olf-panel"><h3>線上好友 <span class="dim" style="letter-spacing:0;font-weight:400">不用註冊：加好友後陣容自動同步，送卡／交換直接成交</span></h3>
+    <div class="grid g2">
+      <div><h4 class="subh">我的好友碼</h4><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b class="mono" style="font-size:22px;letter-spacing:2px">${code}</b><button class="btn pri" data-a="ctInv">📋 複製邀請連結</button></div>
+        <small class="dim">朋友點你的邀請連結打開遊戲，就會自動互加好友。</small></div>
+      <div><h4 class="subh">加好友</h4><div class="row" style="gap:6px"><input id="ctIn" class="inp mono" placeholder="輸入好友碼或貼上邀請連結" style="flex:1"><button class="btn pri" data-a="ctAdd">加好友</button></div>
+        <small class="dim">${st}</small></div>
+    </div>
+    ${inc ? `<h4 class="subh" style="margin-top:12px">收到的交易（${CT.inT.length}）</h4><div class="ct-list">${inc}</div>` : ""}</div>`;
+}
+if (SB) {
+  // 邀請連結 ?f=好友碼
+  try { const f = new URLSearchParams(location.search).get("f"); if (f && /^[A-Z0-9]{6,12}$/i.test(f)) { sessionStorage.setItem("cpaF", f.toUpperCase()); history.replaceState(null, "", location.pathname); } } catch (e) { }
+  const vf = vFriends;
+  vFriends = function () {
+    const h = ofrPanel().replace(/<h3>分享碼好友[\s\S]*?<\/h3>/, "").replace('<div class="grid g2">', '<details class="ofr-off"><summary class="dim">沒有網路的時候：改用分享碼加好友／送卡</summary><div class="grid g2" style="margin-top:8px">')
+      .replace('<h4 class="subh" style="margin-top:12px">分享碼好友（', '</details><h4 class="subh" style="margin-top:12px">好友名單（');
+    return hd("FRIENDS", "好友", "") + ctPanel() + h; };
+  const _om = otMake;
+  otMake = async function () { const s = UI.ot, o = s && (S.ofr || {})[s.fid], c = s && S.cards[s.give]; if (!o || !o.cloud) return _om();
+    if (!c || !trOk(c)) return toast("這張卡現在不能送（陣容中、上鎖或新星卡）", 1);
+    return ctMake(o, c, s.want ? (o.tl || []).find(x => x.u === s.want) : null); };
+  const _op = otPend;
+  otPend = function (fid) { const L = Object.entries(ctS() && S.ctOut || {}).filter(([, x]) => x.to === fid);
+    return _op(fid) + L.map(([id, x]) => { const g = PDB[x.card.pid], w = x.want ? PDB[x.want.pid] : null;
+      return `<small class="tag amb" style="display:inline-block;margin:4px 0">${w ? `交換中：${esc(g.n)} ⇄ ${esc(w.n)}` : `送出中：${esc(g ? g.n : "")}`}・等對方回應・<a href="#" data-a="ctCan" data-id="${id}">取消</a></small>`; }).join("<br>"); };
+  const _add = ofrAdd;
+  ofrAdd = function (txt) { const el = $("#ofrIn"), raw = String(txt != null ? txt : el ? el.value : "");
+    const m = /[?&]f=([A-Za-z0-9]{6,12})/.exec(raw) || /^\s*([A-Za-z0-9]{6,12})\s*$/.exec(raw);
+    if (m && !OFR_RE.test(raw) && !OT_RE.test(raw)) { if (el) el.value = ""; return ctAdd(m[1]); }
+    return _add(txt); };
+  const _fw = ACT.ofrFw, _del = ACT.ofrDel;
+  Object.assign(ACT, {
+    ofrFw: el => { const o = (S.ofr || {})[el.dataset.id]; if (o && o.cloud) return ofrCopy(`⚾ 一起來打「中職九局王牌」！點這個連結就會加 ${o.n} 為好友：\n${ctUrl(o.id)}`, `已複製 ${o.n} 的邀請連結`); return _fw(el); },
+    ofrDel: el => { const o = (S.ofr || {})[el.dataset.id]; if (o && o.cloud) return askYes(`和 ${esc(o.n)} 解除好友？`, () => ctDel(o)); return _del(el); },
+    ctInv: () => ofrCopy(`⚾ ${ofrNm()} 邀請你打「中職九局王牌」！點這個連結打開遊戲，就會自動加為好友：\n${ctUrl(ofrId())}\n（或在好友頁輸入好友碼：${ofrId()}）`, "已複製邀請連結，貼到 LINE 傳給朋友吧！"),
+    ctAdd: () => { const el = $("#ctIn"); if (!el) return; const v = el.value; const m = /[?&]f=([A-Za-z0-9]{6,12})/.exec(v); ctAdd(m ? m[1] : v); },
+    ctAcc: el => ctAccept(el.dataset.id),
+    ctDec: el => ctDecline(el.dataset.id),
+    ctCan: el => askYes("取消這筆交易、把卡拿回來？", () => ctCancel(el.dataset.id)),
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id === "ctIn") ACT.ctAdd(); });
+  setInterval(() => { if (!document.hidden) ctSync(); }, CT_POLL);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) ctSync(); });
+  setTimeout(() => ctSync(), 3000);
+}
 </script>
 
 <script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script></body></html>
