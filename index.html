@@ -8686,6 +8686,21 @@ if (SB) {
   document.addEventListener("visibilitychange", () => { if (!document.hidden) ctSync(); });
   setTimeout(() => ctSync(), 3000);
 }
+
+ofrCopy = async function (text, ok) {
+  try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); toast(ok); return true; } } catch (e) { }
+  try {
+    const t = document.createElement("textarea"); t.value = text; t.setAttribute("readonly", ""); t.style.cssText = "position:fixed;top:0;left:0;opacity:0;pointer-events:none";
+    document.body.appendChild(t); t.select(); t.setSelectionRange(0, text.length); const done = document.execCommand("copy"); t.remove();
+    if (done) { toast(ok); return true; }
+  } catch (e) { }
+  openModal(`<h3>請手動複製</h3><p class="dim" style="font-size:13px">這個瀏覽器不讓遊戲自動複製。下面的文字已經幫你選好了：電腦按 Ctrl+C，手機長按選「拷貝」。</p>
+    <textarea id="cpBox" class="inp mono" readonly rows="5" style="width:100%;font-size:12px" onclick="this.select()">${esc(text)}</textarea>
+    ${navigator.share ? `<div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn pri" data-a="cpShare">📤 用分享傳出去</button></div>` : ""}`);
+  UI.cpTxt = text; setTimeout(() => { const b = $("#cpBox"); if (b) { b.focus(); b.select(); } }, 30);
+  return false;
+};
+ACT.cpShare = () => navigator.share({ text: UI.cpTxt || "" }).then(() => closeModal()).catch(() => { });
 </script>
 
 <script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script></body></html>
