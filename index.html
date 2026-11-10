@@ -619,6 +619,36 @@ html:root{--rN:#3d8bff;--rR:#f5c400;--rSR:#e8382c;--rGD:#ffcc33;--rSSR:#a855ff;-
 .du-r b{font-size:22px;letter-spacing:1px}.du-r b.amb{color:#ffd166}.du-r b.good{color:#7ee2a8}.du-r b.bad{color:#ff8a80}.du-r small{font-size:12px;opacity:.85}
 .du-skip{display:block;margin:6px auto 0;opacity:.7}
 </style>
+
+<style>
+.p3d{position:fixed;inset:0;z-index:320;background:#05080b;display:grid;place-items:center;touch-action:none}
+.p3-stage{position:relative;width:min(100vw,calc(100vh*16/9));height:min(100vh,calc(100vw*9/16));overflow:hidden;user-select:none;-webkit-user-select:none}
+@media (max-aspect-ratio:1/1){.p3-stage{width:100vw;height:100vh}}
+.p3-cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.p3-top{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;padding:10px;gap:8px;pointer-events:none}
+.p3-top>*{pointer-events:auto}
+.p3-sb{display:flex;align-items:center;gap:10px;background:rgba(8,12,18,.78);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px 10px;color:#fff;font:600 14px system-ui,sans-serif}
+.p3-score{display:flex;flex-direction:column;gap:2px}.p3-score b{color:#ffd34d;margin-left:6px;font-size:16px}
+.p3-inn{font-size:22px;font-weight:900;color:#ffd34d;line-height:1}.p3-inn small{font-size:12px;color:#fff;margin-left:2px}
+.p3-dia{width:38px;height:38px}.p3-dia rect{fill:rgba(255,255,255,.18);stroke:#fff;stroke-width:1}.p3-dia rect.on{fill:#ffd34d}
+.p3-cnt{display:flex;flex-direction:column;gap:2px;font-size:11px}.p3-cnt i{display:inline-block;width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.2);margin-left:3px}
+.p3-cnt i.b{background:#4ade80}.p3-cnt i.s{background:#facc15}.p3-cnt i.o{background:#f87171}
+.p3-pi{margin-left:auto;background:rgba(8,12,18,.78);border-radius:10px;padding:4px 12px;color:#fff;font:600 13px system-ui;display:flex;gap:6px;align-items:baseline;min-height:20px}
+.p3-pi:empty{display:none}.p3-pi b{font-size:24px;color:#ffd34d}
+.p3-x{background:rgba(8,12,18,.78);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:6px 10px;font:600 13px system-ui;cursor:pointer}
+.p3-msg{position:absolute;left:50%;top:27%;transform:translateX(-50%);color:#fff;font:600 15px system-ui;text-shadow:0 2px 6px #000;text-align:center;pointer-events:none}
+.p3-big{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) scale(.6);opacity:0;color:#fff;font:900 clamp(28px,6vw,64px) system-ui;letter-spacing:2px;text-shadow:0 4px 18px rgba(0,0,0,.8),0 0 2px #000;pointer-events:none;transition:all .18s;white-space:nowrap}
+.p3-big.show{opacity:1;transform:translate(-50%,-50%) scale(1)}.p3-big.good{color:#ffd34d}.p3-big.bad{color:#ff8a80}
+.p3-bot{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:flex-end;padding:10px;gap:8px;pointer-events:none}
+.p3-who{background:rgba(8,12,18,.78);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px 10px;color:#fff;font:13px system-ui;min-width:150px;max-width:34%}
+.p3-who b{display:block;font-size:16px}.p3-who small{opacity:.7;font-size:11px}
+.p3-bars{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;margin-top:4px;font-size:11px}
+.p3-bars span{display:flex;align-items:center;gap:4px}.p3-bars i{flex:1;height:5px;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden}.p3-bars i b{display:block;height:100%;background:#ffd34d}
+.p3-ctl{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;pointer-events:auto}
+.p3-pt{background:rgba(12,23,18,.9);color:#fff;border:1px solid rgba(232,184,74,.6);border-radius:10px;padding:6px 10px;font:600 14px system-ui;cursor:pointer;display:flex;flex-direction:column;align-items:center;min-width:64px}
+.p3-pt b{color:#ffd34d;font-size:11px}.p3-pt small{opacity:.7;font-size:10px;font-weight:400}.p3-pt:hover{background:rgba(232,184,74,.25)}
+@media (max-width:640px){.p3-who{min-width:0;max-width:30%;padding:4px 6px}.p3-bars{grid-template-columns:1fr}.p3-who b{font-size:13px}}
+</style>
 <script>window.CPA_SUPA={url:"https://ehjamvrdrtiulncmkmnr.supabase.co",key:"sb_publishable_ZTeZRRnbQ1JhroPVwj-mYw_vEsagSjZ"};</script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a1d"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"></head><body>
 <meta charset="utf-8">
 <title>中職九局王牌</title>
@@ -3210,8 +3240,10 @@ function doPA(pitch, guess, o = {}) {
     S: X.S[0] * Math.exp((con - stuff) / X.S[1]) * Math.exp(-(def - 50) / 140) * m.hit * (1 + (spd - 50) / 400),
     OUT: X.OUT[0] * Math.exp((stuff - (con + pow) / 2) / X.OUT[1]) * Math.exp((def - 50) / 140),
   };
+  if (o.inplay) { delete W.K; delete W.BB; delete W.HBP; }
   let r = rnd() * sum(Object.values(W)), res = "OUT";
   for (const k in W) { r -= W[k]; if (r <= 0) { res = k; break; } }
+  if (o.forceRes) res = o.forceRes;
 
   let runs = [];
   const bRunner = { bi: bs.bi, rp: fs.cp, er: true };
@@ -3220,7 +3252,7 @@ function doPA(pitch, guess, o = {}) {
   const spdR = x => sideOfRunner(x).spd;
   let sub = "", outsAdd = 0, rbi = true;
   b.box.PA++; p.box.BF++;
-  const np = res === "K" ? ri(3, 7) : res === "BB" ? ri(4, 8) : ri(1, 6);
+  const np = o.np || (res === "K" ? ri(3, 7) : res === "BB" ? ri(4, 8) : ri(1, 6));
   p.pc += np; p.box.NP += np;
 
   if (res === "K") { outsAdd = 1; b.box.AB++; b.box.SO++; p.box.SO++; nb = [...B]; }
@@ -4822,13 +4854,15 @@ function vMatch() {
   const bBars = [["打擊", b.con], ["力量", b.pow], ["選球", b.eye], ["速度", b.spd]];
   const bars = arr => `<div class="stattbl">${arr.map(([l, v]) => `<span class="muted">${l}</span><div class="bar"><i style="width:${v / 1.2}%"></i></div><b>${Math.round(v)}</b>`).join("")}</div>`;
   const ctrl = tacCtrl(userBat) + (userBat
-    ? `<div class="lbl">你的進攻：猜球種（猜中打擊與力量 +20%，猜錯 -12%），再看準時機揮棒</div>
+    ? `${P3D_ON() ? `<div class="lbl">你的進攻：進入球場，看準來球直接揮棒（打擊越高擊球圈越大、選球越高越早看出進壘點）</div>
+       <button class="choice fb p3d-go" data-a="park3d">⚾ 進場打擊<small>對戰 ${esc(p.n)}・${p.kmh}km/h・${esc((p.rep || []).join("/"))}</small></button>` : `<div class="lbl">你的進攻：猜球種（猜中打擊與力量 +20%，猜錯 -12%）</div>
        <button class="choice fb" data-a="act" data-k="FB">猜直球<small>${p.kmh}km/h・等級 ${p.fb}</small></button>
-       <button class="choice br" data-a="act" data-k="BR">猜變化球<small>${esc((p.rep || []).join("/"))}・等級 ${p.brk}</small></button>
+       <button class="choice br" data-a="act" data-k="BR">猜變化球<small>${esc((p.rep || []).join("/"))}・等級 ${p.brk}</small></button>`}
        <div class="row tact">${canSteal() ? `<button class="btn clay" data-a="steal">盜壘（${esc(bs.bat[G.bases[0] && !G.bases[1] ? G.bases[0].bi : G.bases[1].bi].n)}）</button>` : ""}${canBunt() ? `<button class="btn" data-a="bunt">犧牲短打</button>` : ""}</div>`
-    : `<div class="lbl">你的防守：選擇球種與配球，再把指針停在目標區</div>
+    : `${P3D_ON() ? `<div class="lbl">你的防守：進入球場，選球路、瞄準進壘點投出（控球越好越準、球威越高球越快）</div>
+       <button class="choice fb p3d-go" data-a="park3d">⚾ 進場投球<small>${esc(p.n)}・${p.kmh}km/h・${esc((p.rep || []).join("/"))}</small></button>` : `<div class="lbl">你的防守：選擇球種與配球</div>
        <button class="choice fb" data-a="act" data-k="FB">投直球<small>${p.kmh}km/h・等級 ${p.fb}</small></button>
-       <button class="choice br" data-a="act" data-k="BR">投變化球<small>${esc((p.rep || []).join("/"))}・等級 ${p.brk}</small></button>
+       <button class="choice br" data-a="act" data-k="BR">投變化球<small>${esc((p.rep || []).join("/"))}・等級 ${p.brk}</small></button>`}
        <div class="row tact">${!G.bases[0] || !G.bases[1] || !G.bases[2] ? `<button class="btn" data-a="ibb">故意四壞</button>` : ""}${nextRP(1 - G.half) >= 0 ? `<button class="btn" data-a="pchange">換投（${esc(fs.staff[nextRP(1 - G.half)].n)}）</button>` : ""}</div>`);
   const L = G.last;
   return `<div class="match">${sb}
@@ -8863,6 +8897,371 @@ timingBar = function (userBat, pitch, done) {
   el.querySelector(".du-skip").addEventListener("click", () => { if (!ended) finish(); else close(); });
   t0 = performance.now(); raf = requestAnimationFrame(frame);
 };
+
+/* =========================================================
+   v49 3D 球場：Q 版球員、逐球對決（three.js r128）
+   ========================================================= */
+var P3D_ON = () => !(S.opt && S.opt.timing === false);
+const P3 = { T: null, R: null };
+function loadThree() {
+  if (window.THREE) return Promise.resolve();
+  const add = u => new Promise((res, rej) => { const s = document.createElement("script"); s.src = u; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  return (window.CPA_SUPA ? add("three.min.js") : Promise.reject()).catch(() => add("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"));
+}
+const wait = ms => new Promise(r => setTimeout(r, ms));
+/* 球路：橫向／縱向位移（公尺，右投視角）、速度倍率 */
+const PTYPE = [
+  [/直球|四縫|速球/, { dx: 0, dy: .06, v: 1 }], [/卡特/, { dx: .12, dy: -.06, v: .94 }], [/滑/, { dx: .32, dy: -.12, v: .87 }],
+  [/曲/, { dx: .14, dy: -.5, v: .78 }], [/指叉|叉/, { dx: .02, dy: -.4, v: .88 }], [/變速|變化速/, { dx: -.08, dy: -.28, v: .81 }],
+  [/伸卡|沉|二縫/, { dx: -.16, dy: -.22, v: .95 }], [/螺旋|旋/, { dx: -.24, dy: -.2, v: .83 }], [/蝴蝶|彈指/, { dx: .1, dy: -.25, v: .7, flutter: 1 }],
+];
+const ptOf = name => (PTYPE.find(([re]) => re.test(name)) || [0, { dx: .25, dy: -.15, v: .86 }])[1];
+const ZX = .26, ZY0 = .48, ZY1 = 1.08;          // 好球帶（本壘板前緣，z = 0）
+const KMH2T = kmh => 18.44 / (kmh / 3.6) * 1.85; // 遊戲速度：比真實慢一些，方便操作
+
+/* ---------- Q 版球員 ---------- */
+function chibi(c1, opt = {}) {
+  const T = THREE, M = c => new T.MeshLambertMaterial({ color: c });
+  const g = new T.Group(), skin = M(0xf1c6a0), jer = M(c1), pants = M(opt.pants || 0xf3f1ea), dark = M(0x1d1d22);
+  const cyl = (rt, rb, h, m) => new T.Mesh(new T.CylinderGeometry(rt, rb, h, 12), m);
+  const sph = (r, m) => new T.Mesh(new T.SphereGeometry(r, 18, 14), m);
+  const limb = (x, y, len, r, m, end) => { const pv = new T.Group(); pv.position.set(x, y, 0); const l = cyl(r, r * .9, len, m); l.position.y = -len / 2; pv.add(l); const e = sph(r * 1.15, end || m); e.position.y = -len; pv.add(e); return pv; };
+  const legL = limb(-.12, .5, .42, .09, pants, dark), legR = limb(.12, .5, .42, .09, pants, dark);
+  const up = new T.Group(); up.position.y = .5;
+  const body = cyl(.21, .25, .46, jer); body.position.y = .22; up.add(body);
+  const belt = cyl(.255, .255, .06, dark); belt.position.y = .02; up.add(belt);
+  const armL = limb(-.3, .4, .34, .065, jer, skin), armR = limb(.3, .4, .34, .065, jer, skin); up.add(armL, armR);
+  const head = new T.Group(); head.position.y = .82; up.add(head);
+  const face = sph(.42, skin); head.add(face);
+  const hel = new T.Mesh(new T.SphereGeometry(.45, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2.1), M(opt.cap || c1)); hel.position.y = .04; head.add(hel);
+  const brim = new T.Mesh(new T.CylinderGeometry(.3, .3, .03, 16, 1, false, -Math.PI / 2, Math.PI), M(opt.cap || c1)); brim.position.set(0, .06, .3); head.add(brim);
+  [-1, 1].forEach(s => { const e = sph(.05, dark); e.scale.set(1, 1.5, .6); e.position.set(s * .14, -.04, .38); head.add(e); });
+  const no = sph(.06, M(0xffffff)); no.scale.set(1, 1, .2); no.position.set(0, .2, -.22); body.add(no);
+  g.add(legL, legR, up);
+  let bat = null;
+  if (opt.bat) { bat = new T.Group(); const b1 = cyl(.035, .022, .85, M(0xc89a5b)); b1.position.y = .42; bat.add(b1); bat.position.set(.0, -.38, 0); armR.add(bat); }
+  if (opt.glove) { const gl = sph(.12, M(0x8a5a2b)); gl.scale.set(1, 1.1, .6); gl.position.y = -.38; armL.add(gl); }
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return { g, legL, legR, up, armL, armR, head, bat };
+}
+/* ---------- 文字貼圖 ---------- */
+function texText(w, h, draw) { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t; }
+/* ---------- 球場 ---------- */
+function buildPark() {
+  const T = THREE, sc = new T.Scene(), M = (c, o) => new T.MeshLambertMaterial({ color: c, ...(o || {}) });
+  sc.background = texText(2, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#3b78c9"); gr.addColorStop(.6, "#9cc9ef"); gr.addColorStop(1, "#dcecf7"); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+  sc.fog = new T.Fog(0xcfe3f2, 140, 320);
+  sc.add(new T.HemisphereLight(0xffffff, 0x4a7a46, .85));
+  const sun = new T.DirectionalLight(0xffffff, .75); sun.position.set(-30, 60, 25); sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 150 }); sun.target.position.set(0, 0, -15); sc.add(sun, sun.target);
+  const flat = (geo, mat, y) => { const m = new T.Mesh(geo, mat); m.rotation.x = -Math.PI / 2; m.position.y = y || 0; m.receiveShadow = true; sc.add(m); return m; };
+  // 草皮（割草條紋）
+  const grassT = texText(256, 256, (g, w, h) => { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.fillStyle = (i + j) % 2 ? "#3f8f45" : "#469c4c"; g.fillRect(i * 32, j * 32, 32, 32); } });
+  grassT.wrapS = grassT.wrapT = T.RepeatWrapping; grassT.repeat.set(26, 26);
+  flat(new T.CircleGeometry(170, 64), new T.MeshLambertMaterial({ map: grassT }), 0);
+  const dirt = M(0xb07c4f);
+  const fan = flat(new T.CircleGeometry(29, 48, Math.PI * 1.25, Math.PI * .5), dirt, .01); fan.position.z = -2;   // 內野紅土
+  const ig = flat(new T.PlaneGeometry(25.5, 25.5), new T.MeshLambertMaterial({ map: grassT }), .02); ig.rotation.z = Math.PI / 4; ig.position.set(0, .02, -19.4);
+  flat(new T.CircleGeometry(2.75, 32), dirt, .03).position.set(0, .03, -18.44);
+  flat(new T.CircleGeometry(4, 32), dirt, .03);
+  const mound = new T.Mesh(new T.CylinderGeometry(1.2, 2.7, .25, 32), dirt); mound.position.set(0, .12, -18.44); mound.receiveShadow = true; sc.add(mound);
+  const rubber = new T.Mesh(new T.BoxGeometry(.6, .05, .15), M(0xffffff)); rubber.position.set(0, .26, -18.44); sc.add(rubber);
+  // 本壘板、壘包、邊線
+  const pl = new T.Shape(); pl.moveTo(-.216, 0); pl.lineTo(.216, 0); pl.lineTo(.216, .216); pl.lineTo(0, .43); pl.lineTo(-.216, .216); pl.lineTo(-.216, 0);
+  flat(new T.ShapeGeometry(pl), M(0xffffff), .04);
+  [[19.4, -19.4], [0, -38.8], [-19.4, -19.4]].forEach(([x, z]) => { const b = new T.Mesh(new T.BoxGeometry(.4, .08, .4), M(0xffffff)); b.position.set(x, .05, z); b.rotation.y = Math.PI / 4; sc.add(b); });
+  [-1, 1].forEach(s => { const l = new T.Mesh(new T.PlaneGeometry(.1, 150), M(0xffffff)); l.rotation.x = -Math.PI / 2; l.rotation.z = s * Math.PI / 4; l.position.set(s * 53, .04, -53); sc.add(l); });
+  [-1, 1].forEach(s => { const bx = new T.Mesh(new T.PlaneGeometry(1.2, 1.8), new T.MeshBasicMaterial({ color: 0xffffff, wireframe: true })); bx.rotation.x = -Math.PI / 2; bx.position.set(s * .95, .045, .2); sc.add(bx); });
+  // 全壘打牆＋廣告看板＋看台（觀眾）
+  const ads = ["中職九局王牌", "CPBL", "ACE NINE", "全力應援", "PLAY BALL", "王牌時刻", "熱血棒球", "年度球員卡"], adCol = ["#c8102e", "#0b3d91", "#e8b84a", "#1f7a3a", "#5b2c8f", "#e86a1a"];
+  const crowdT = texText(256, 64, (g, w, h) => { g.fillStyle = "#2b3440"; g.fillRect(0, 0, w, h); for (let i = 0; i < 900; i++) { g.fillStyle = ["#e8e2d0", "#c8102e", "#1c4fa0", "#f4c430", "#2e8b57", "#f08a24", "#ffffff", "#8b5a2b"][Math.floor(Math.random() * 8)]; g.fillRect(Math.random() * w, Math.random() * h, 3, 3); } });
+  crowdT.wrapS = T.RepeatWrapping; crowdT.repeat.set(3, 1);
+  const R = 108, N = 26, a0 = -Math.PI * .75 - .06, a1 = -Math.PI * .25 + .06;
+  for (let i = 0; i < N; i++) {
+    const a = a0 + (a1 - a0) * (i + .5) / N, seg = (a1 - a0) / N * R + .2, x = Math.cos(a) * R, z = Math.sin(a) * R, ry = -a - Math.PI / 2;
+    const wall = new T.Mesh(new T.BoxGeometry(seg, 3.2, .6), M(0x1f5a3a)); wall.position.set(x, 1.6, z); wall.rotation.y = ry; sc.add(wall);
+    const ad = new T.Mesh(new T.PlaneGeometry(seg - .3, 1.3), new T.MeshBasicMaterial({ map: texText(256, 64, (g, w, h) => { g.fillStyle = adCol[i % adCol.length]; g.fillRect(0, 0, w, h); g.fillStyle = "#fff"; g.font = "bold 30px sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(ads[i % ads.length], w / 2, h / 2); }) }));
+    ad.position.set(Math.cos(a) * (R - .32), 1.75, Math.sin(a) * (R - .32)); ad.rotation.y = ry; sc.add(ad);
+    for (let k = 0; k < 4; k++) { const rr2 = R + 3 + k * 5, st = new T.Mesh(new T.BoxGeometry(seg * rr2 / R + .3, 2.2, 5), [M(0x39424d), M(0x39424d), M(0x4a535e), M(0x39424d), new T.MeshLambertMaterial({ map: crowdT }), M(0x39424d)]);
+      st.position.set(Math.cos(a) * rr2, 3.4 + k * 2.6, Math.sin(a) * rr2); st.rotation.y = ry; sc.add(st); }
+  }
+  // 中外野大螢幕
+  const board = new T.Mesh(new T.BoxGeometry(26, 11, 1.5), M(0x15181d)); board.position.set(0, 21, -135); sc.add(board);
+  const scr = new T.Mesh(new T.PlaneGeometry(24, 9), new T.MeshBasicMaterial({ map: texText(512, 192, () => { }) })); scr.position.set(0, 21, -134.2); sc.add(scr);
+  // 好球帶
+  const zg = new T.BufferGeometry(), zv = [];
+  const L = (x1, y1, x2, y2) => zv.push(x1, y1, 0, x2, y2, 0);
+  L(-ZX, ZY0, ZX, ZY0); L(ZX, ZY0, ZX, ZY1); L(ZX, ZY1, -ZX, ZY1); L(-ZX, ZY1, -ZX, ZY0);
+  for (let i = 1; i < 3; i++) { const x = -ZX + 2 * ZX * i / 3, y = ZY0 + (ZY1 - ZY0) * i / 3; L(x, ZY0, x, ZY1); L(-ZX, y, ZX, y); }
+  zg.setAttribute("position", new T.Float32BufferAttribute(zv, 3));
+  const zone = new T.LineSegments(zg, new T.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: .55 })); sc.add(zone);
+  // 球、影子、游標
+  const ball = new T.Mesh(new T.SphereGeometry(.05, 16, 12), new T.MeshBasicMaterial({ color: 0xffffff })); ball.visible = false; sc.add(ball);
+  const shadow = new T.Mesh(new T.CircleGeometry(.07, 16), new T.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .3 })); shadow.rotation.x = -Math.PI / 2; shadow.visible = false; sc.add(shadow);
+  const ring = (r, w, c, o) => new T.Mesh(new T.RingGeometry(r - w, r, 40), new T.MeshBasicMaterial({ color: c, transparent: true, opacity: o, side: T.DoubleSide, depthTest: false }));
+  const cur = ring(1, .1, 0xffd34d, .95); cur.renderOrder = 9; sc.add(cur);
+  const curFill = new T.Mesh(new T.CircleGeometry(1, 40), new T.MeshBasicMaterial({ color: 0xffd34d, transparent: true, opacity: .14, depthTest: false })); curFill.renderOrder = 8; sc.add(curFill);
+  const aim = ring(1, .12, 0xffffff, .95); aim.renderOrder = 9; aim.visible = false; sc.add(aim);
+  const mark = ring(.07, .025, 0x7ee2ff, .9); mark.renderOrder = 9; mark.visible = false; sc.add(mark);
+  return { sc, ball, shadow, cur, curFill, aim, mark, scr, zone, figs: [] };
+}
+/* 大螢幕：比分 */
+function p3Board(P) {
+  const tx = texText(512, 192, (g, w, h) => {
+    g.fillStyle = "#0b0e12"; g.fillRect(0, 0, w, h); g.fillStyle = "#e8b84a"; g.font = "bold 26px sans-serif"; g.textAlign = "center"; g.fillText("中職九局王牌", w / 2, 34);
+    G.sides.forEach((s, i) => { g.fillStyle = "#fff"; g.font = "bold 40px sans-serif"; g.textAlign = "left"; g.fillText(s.ab, 40, 92 + i * 56); g.textAlign = "right"; g.fillStyle = "#ffd34d"; g.fillText(String(G.sc[i]), w - 40, 92 + i * 56); });
+    g.fillStyle = "#9fb3c8"; g.font = "22px sans-serif"; g.textAlign = "center"; g.fillText(`${G.inn} 局${G.half ? "下" : "上"}　${G.outs} 出局`, w / 2, 182);
+  });
+  P.scr.material.map.dispose(); P.scr.material.map = tx; P.scr.material.needsUpdate = true;
+}
+/* 守備位置（打者方向：本壘在原點，投手丘在 -z） */
+const FPOS = { P: [0, -18.44], C: [0, 1.05], "1B": [16.5, -22], "2B": [6.5, -31], SS: [-6.5, -31], "3B": [-16.5, -22], LF: [-30, -72], CF: [0, -86], RF: [30, -72] };
+const BASEP = [[19.4, -19.4], [0, -38.8], [-19.4, -19.4]];
+function p3Cast(P) {
+  const T = THREE; P.figs.forEach(f => { P.sc.remove(f.g); f.g.traverse(o => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } }); }); P.figs = [];
+  const bs = batSide(), fs = fldSide(), b = curB(), p = curP(), lh = (b.bats || "R") === "L";
+  const col = s => new T.Color(TEAMS[s.tid] ? TEAMS[s.tid].c : (s.c || "#c8102e"));
+  const add = (f, x, z, ry) => { f.g.position.set(x, 0, z); f.g.rotation.y = ry || 0; P.sc.add(f.g); P.figs.push(f); return f; };
+  P.bat = add(chibi(col(bs), { bat: true }), lh ? 1.05 : -1.05, .3, lh ? -Math.PI / 2 - .45 : Math.PI / 2 + .45);
+  P.bat.lh = lh;
+  P.pit = add(chibi(col(fs), { glove: true }), 0, -18.44, 0);
+  P.pit.g.position.y = .25; P.pit.lefty = (p.throws || "R") === "L";
+  P.cat = add(chibi(col(fs), { glove: true, cap: 0x222222 }), 0, 1.15, Math.PI); P.cat.g.scale.setScalar(.95);
+  P.cat.legL.rotation.x = -1.4; P.cat.legR.rotation.x = -1.4; P.cat.g.position.y = -.28;
+  P.ump = add(chibi(new T.Color(0x23262c), { pants: 0x55595f, cap: 0x111111 }), .2, 2.0, Math.PI);
+  P.fld = {};
+  ["1B", "2B", "SS", "3B", "LF", "CF", "RF"].forEach(k => { P.fld[k] = add(chibi(col(fs), { glove: true }), FPOS[k][0], FPOS[k][1], Math.atan2(-FPOS[k][0], -FPOS[k][1]) + Math.PI); });
+  P.run = G.bases.map((r, i) => r ? add(chibi(col(bs)), BASEP[i][0] + (i === 1 ? 0 : -1.2 * Math.sign(BASEP[i][0])), BASEP[i][1] + 1, 0) : null);
+  P.cat.g.visible = P.ump.g.visible = false;
+  p3Pose(P.bat, "stance", 0);
+}
+/* 動作 */
+function p3Pose(f, k, u) {
+  if (!f) return;
+  const s = f.lh ? -1 : 1;
+  if (k === "stance") { f.up.rotation.set(0, 0, 0); f.armR.rotation.set(-2.4, 0, -.3 * s); f.armL.rotation.set(-2.2, 0, .5 * s); if (f.bat) f.bat.rotation.set(.4, 0, 0); f.up.position.y = .5 + Math.sin(performance.now() / 260) * .015; }
+  else if (k === "swing") { const e = Math.min(1, u); f.up.rotation.y = -s * 2.6 * e; f.armR.rotation.set(-2.4 + 1.1 * e, 0, -.3 * s - 1.2 * s * e); f.armL.rotation.set(-2.2 + 1.0 * e, 0, .5 * s - 1.1 * s * e); if (f.bat) f.bat.rotation.set(.4 + 1.2 * e, 0, 0); }
+  else if (k === "pitch") { // 0 → 1：抬腿、跨步、甩臂
+    const s2 = f.lefty ? -1 : 1, lift = u < .55 ? Math.sin(u / .55 * Math.PI / 2) : Math.max(0, 1 - (u - .55) / .2);
+    f.legL.rotation.x = -1.5 * lift; f.up.rotation.x = u < .6 ? -.15 * lift : .5 * Math.min(1, (u - .6) / .25);
+    const arm = u < .6 ? -1.0 * u / .6 : u < .82 ? -1 - 2.4 * (u - .6) / .22 : -3.4 + 4.2 * Math.min(1, (u - .82) / .18);
+    (s2 > 0 ? f.armR : f.armL).rotation.x = arm; (s2 > 0 ? f.armL : f.armR).rotation.x = -1.1 * Math.min(1, u * 2);
+  }
+  else if (k === "idle") { f.up.rotation.set(0, 0, 0); f.legL.rotation.x = 0; f.armR.rotation.x = 0; f.armL.rotation.x = 0; }
+  else if (k === "run") { const t = performance.now() / 70; f.legL.rotation.x = Math.sin(t) * .9; f.legR.rotation.x = -Math.sin(t) * .9; f.armL.rotation.x = -Math.sin(t) * .8; f.armR.rotation.x = Math.sin(t) * .8; }
+}
+
+/* ---------- 進場 ---------- */
+async function park3d() {
+  if (!G || G.over || UI.tb) return;
+  try { await loadThree(); } catch (e) { toast("3D 球場載入失敗，改用平面打球畫面", 1); return startPA("FB"); }
+  UI.tb = true;
+  const T = THREE;
+  const el = document.createElement("div"); el.className = "p3d";
+  el.innerHTML = `<div class="p3-stage"><canvas></canvas>
+    <div class="p3-top"><div class="p3-sb"></div><div class="p3-pi"></div><button class="p3-x" type="button">離開球場</button></div>
+    <div class="p3-msg"></div><div class="p3-big"></div>
+    <div class="p3-bot"><div class="p3-who l"></div><div class="p3-ctl"></div><div class="p3-who r"></div></div></div>`;
+  document.body.appendChild(el);
+  const cv = el.querySelector("canvas"), stage = el.querySelector(".p3-stage");
+  const R = P3.R || (P3.R = new T.WebGLRenderer({ antialias: true }));
+  R.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); R.shadowMap.enabled = true;
+  stage.replaceChild(R.domElement, cv); R.domElement.className = "p3-cv";
+  const P = P3.P || (P3.P = buildPark());
+  const cam = new T.PerspectiveCamera(42, 16 / 9, .1, 600);
+  const fit = () => { const w = stage.clientWidth, h = stage.clientHeight; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); };
+  fit(); window.addEventListener("resize", fit);
+  const camBat = () => { const lh = P.bat && P.bat.lh; cam.position.set(lh ? .5 : -.5, 1.9, 3.7); cam.lookAt(lh ? -.15 : .15, .95, -10); };
+  camBat();
+  let alive = true, quit = false, raf, onFrame = null;
+  const loop = now => { if (!alive) return; if (onFrame) onFrame(now); if (P.bat && P.bat.pose === "stance") p3Pose(P.bat, "stance", 0); R.render(P.sc, cam); raf = requestAnimationFrame(loop); };
+  raf = requestAnimationFrame(loop);
+  // 指標
+  const ray = new T.Raycaster(), plane = new T.Plane(new T.Vector3(0, 0, 1), 0), hit = new T.Vector3();
+  const ptr = { x: 0, y: (ZY0 + ZY1) / 2 };
+  const toZone = e => { const r = R.domElement.getBoundingClientRect(); ray.setFromCamera({ x: (e.clientX - r.left) / r.width * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 }, cam);
+    if (ray.ray.intersectPlane(plane, hit)) { ptr.x = clamp(hit.x, -ZX * 1.9, ZX * 1.9); ptr.y = clamp(hit.y, ZY0 - .35, ZY1 + .35); } };
+  let clickFn = null;
+  const pm = e => toZone(e), pd = e => { if (e.target.closest("button")) return; e.preventDefault(); if (e.pointerType !== "mouse") toZone(e); if (clickFn) clickFn(); };
+  const kd = e => { if (e.code === "Space" || e.key === "Enter") { e.preventDefault(); if (clickFn) clickFn(); } else if (e.key === "Escape") quitNow();
+    else if (/^[1-5]$/.test(e.key)) { const b = el.querySelectorAll(".p3-pt")[+e.key - 1]; if (b) b.click(); }
+    const st = .03; if (e.key === "ArrowLeft") ptr.x -= st; if (e.key === "ArrowRight") ptr.x += st; if (e.key === "ArrowUp") ptr.y += st; if (e.key === "ArrowDown") ptr.y -= st; };
+  stage.addEventListener("pointermove", pm); stage.addEventListener("pointerdown", pd); document.addEventListener("keydown", kd);
+  const $e = s => el.querySelector(s);
+  const msg = (t, c) => { const m = $e(".p3-msg"); m.className = "p3-msg " + (c || ""); m.innerHTML = t || ""; };
+  const big = async (t, c, ms) => { const m = $e(".p3-big"); m.className = "p3-big show " + (c || ""); m.textContent = t; await wait(ms || 1100); m.className = "p3-big"; };
+  const quitNow = () => { quit = true; if (abortFn) abortFn(); };
+  let abortFn = null;
+  $e(".p3-x").addEventListener("click", quitNow);
+  const close = () => { alive = false; cancelAnimationFrame(raf); window.removeEventListener("resize", fit); document.removeEventListener("keydown", kd); el.remove(); UI.tb = false; render(); };
+  /* HUD */
+  const hud = cnt => {
+    const bs = batSide(), fs = fldSide(), b = curB(), p = curP(), fat = fatigueF(p), dots = (n, m, c) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? c : ""}"></i>`).join("");
+    const bases = `<svg viewBox="0 0 40 40" class="p3-dia">${[[30, 20], [20, 10], [10, 20]].map(([x, y], i) => `<rect x="${x - 5}" y="${y - 5}" width="10" height="10" transform="rotate(45 ${x} ${y})" class="${G.bases[i] ? "on" : ""}"/>`).join("")}</svg>`;
+    $e(".p3-sb").innerHTML = `<div class="p3-score"><span>${esc(G.sides[0].ab)} <b>${G.sc[0]}</b></span><span>${esc(G.sides[1].ab)} <b>${G.sc[1]}</b></span></div>
+      <div class="p3-inn">${G.inn}<small>${G.half ? "下" : "上"}</small></div>${bases}
+      <div class="p3-cnt"><div>B ${dots(cnt.b, 3, "b")}</div><div>S ${dots(cnt.s, 2, "s")}</div><div>O ${dots(G.outs, 2, "o")}</div></div>`;
+    const bar = (l, v) => `<span>${l}<i><b style="width:${clamp(v, 0, 120) / 1.2}%"></b></i>${Math.round(v)}</span>`;
+    $e(".p3-who.l").innerHTML = `<small>${esc(bs.ab)}・第 ${bs.bi + 1} 棒</small><b>${esc(b.n)}</b><div class="p3-bars">${bar("打擊", b.con)}${bar("力量", b.pow)}${bar("選球", b.eye)}${bar("速度", b.spd)}</div>`;
+    $e(".p3-who.r").innerHTML = `<small>${esc(fs.ab)}・投手・${p.pc} 球</small><b>${esc(p.n)}</b><div class="p3-bars">${bar("球威", p.velo * fat)}${bar("控球", p.ctl * (.55 + .45 * fat))}${bar("變化", p.brk * fat)}${bar("體力", fat * 100)}</div>`;
+  };
+  /* 投一球：回傳球的軌跡函式 */
+  const pitchPath = (pt, tx, ty, T0, lefty) => {
+    const rel = new T.Vector3(lefty ? -.55 : .55, 1.95, -17.3), side = lefty ? -1 : 1, bm = .55 + curP().brk / 140;
+    const dx = pt.dx * side * bm, dy = pt.dy * bm, aim = new T.Vector3(tx - dx, ty - dy, 0);
+    return u => { const e = Math.pow(Math.max(0, u - .35) / .65, 2.2), fl = pt.flutter ? Math.sin(u * 19) * .05 * u : 0;
+      return new T.Vector3(rel.x + (aim.x - rel.x) * u + dx * e + fl, rel.y + (aim.y - rel.y) * u + dy * e + Math.sin(u * Math.PI) * .18 * (1.05 - pt.v), rel.z + (0 - rel.z) * u); };
+  };
+  const inZone = (x, y) => Math.abs(x) <= ZX + .037 && y >= ZY0 - .037 && y <= ZY1 + .037;
+  const runPitch = (path, T0, onT) => new Promise(res => {
+    const t0 = performance.now(); P.ball.visible = true; P.shadow.visible = true; let done = false;
+    abortFn = () => { if (!done) { done = true; onFrame = null; res(null); } };
+    onFrame = now => { const u = (now - t0) / T0; const q = path(Math.min(u, 1.25)); P.ball.position.copy(q); P.shadow.position.set(q.x, .02, q.z); if (onT) onT(u, now);
+      if (u >= 1.25 && !done) { done = true; onFrame = null; P.ball.visible = false; P.shadow.visible = false; res(true); } };
+  });
+  const windup = (ms) => new Promise(res => { const t0 = performance.now(); P.pit.g.position.y = .25;
+    onFrame = now => { const u = (now - t0) / ms; p3Pose(P.pit, "pitch", Math.min(1, u * .82)); if (u >= 1) { onFrame = null; res(); } }; });
+  const swingAnim = () => { const t0 = performance.now(); P.bat.pose = "swing"; const f = () => { const u = (performance.now() - t0) / 170; p3Pose(P.bat, "swing", u); if (u < 1.6 && alive) requestAnimationFrame(f); else { P.bat.pose = "stance"; } }; requestAnimationFrame(f); };
+
+  /* ---- 玩家打擊：一球 ---- */
+  const batOne = async cnt => {
+    const p = curP(), b = curB(), fat = fatigueF(p);
+    // AI 配球：球數領先就丟邊角或壞球、落後就進好球帶；控球越好越準
+    const fbP = aiPitch(p) === "FB", name = fbP ? "直球" : pick(p.rep && p.rep.length ? p.rep : ["滑球"]), pt = fbP ? PTYPE[0][1] : ptOf(name);
+    const inZp = clamp(.5 + p.ctl / 280 + (cnt.b === 3 ? .22 : cnt.b === 2 ? .08 : 0) - (cnt.s === 2 ? .16 : 0), .25, .9), wantIn = rnd() < inZp;
+    let tx, ty;
+    if (wantIn) { const edge = rnd() < .35 + p.ctl / 300; tx = (edge ? (rnd() < .5 ? -1 : 1) * ZX * (.6 + rnd() * .35) : (rnd() * 2 - 1) * ZX * .55); ty = edge ? (rnd() < .5 ? ZY0 + .08 : ZY1 - .08) + gauss() * .04 : (ZY0 + ZY1) / 2 + gauss() * .12; }
+    else { const s = rnd(); tx = s < .4 ? (rnd() < .5 ? -1 : 1) * (ZX + .08 + rnd() * .15) : (rnd() * 2 - 1) * ZX; ty = s < .4 ? ZY0 + rnd() * (ZY1 - ZY0) : rnd() < .7 ? ZY0 - .1 - rnd() * .2 : ZY1 + .08 + rnd() * .12; }
+    const sc = (.02 + (100 - p.ctl) / 900) / (.7 + .3 * fat); tx += gauss() * sc; ty += gauss() * sc;
+    const kmh = Math.round((fbP ? p.kmh * (.97 + .03 * fat) - ri(0, 2) : p.kmh * pt.v * (.97 + rnd() * .04))), T0 = KMH2T(kmh) * 1000;
+    const path = pitchPath(pt, tx, ty, T0, P.pit.lefty);
+    // 擊球圈：打擊越高越大；選球越高越早看到進壘點
+    const hr = .075 + b.con / 1250;
+    P.cur.visible = P.curFill.visible = true; P.aim.visible = false; P.cur.scale.setScalar(hr); P.curFill.scale.setScalar(hr - .01);
+    let swingT = null, swingP = null;
+    clickFn = null; msg(`投手準備…`);
+    const follow = () => { P.cur.position.set(ptr.x, ptr.y, .01); P.curFill.position.set(ptr.x, ptr.y, .005); };
+    onFrame = follow; await wait(500 + rnd() * 400); if (quit) return null;
+    await windup(620); if (quit) return null;
+    msg(""); $e(".p3-pi").innerHTML = `<b>${kmh}</b><small>km/h</small><span>${esc(name)}</span>`;
+    const tEye = 1 - clamp(b.eye / 150, .15, .75);
+    clickFn = () => { if (swingT != null) return; swingT = performance.now(); swingP = { ...ptr }; swingAnim(); };
+    let tArr = 0;
+    const r = await runPitch(path, T0, (u, now) => { follow(); if (u >= tEye && u < 1.05) { P.mark.visible = true; P.mark.position.set(tx, ty, .02); } if (u >= 1 && !tArr) tArr = now; if (u > 1.1) P.mark.visible = false; });
+    clickFn = null; P.mark.visible = false; p3Pose(P.pit, "idle"); if (!r) return null;
+    if (!tArr) tArr = performance.now();
+    const inz = inZone(tx, ty), info = { kmh, name, inz, fb: fbP };
+    if (swingT == null) return { k: inz ? "strike" : "ball", look: 1, ...info };
+    const dt = swingT - (performance.now() - (1.25 - 1) * T0) , d = Math.hypot(swingP.x - tx, swingP.y - ty) / hr;
+    const dtt = swingT - (tArr || swingT);
+    const ts = Math.max(0, 1 - Math.abs(dtt) / 140), ps = Math.max(0, 1 - d), s = ts * ps; void dt;
+    if (d > 1 || ts <= 0) return { k: "strike", whiff: 1, when: dtt < -70 ? "太早" : dtt > 70 ? "太晚" : "", ...info };
+    if (s < .22 || (Math.abs(dtt) > 85 && rnd() < .6)) return { k: "foul", ...info, dir: dtt };
+    return { k: "inplay", q: s, dir: dtt, ...info };
+  };
+
+  /* ---- 玩家投球：一球 ---- */
+  const pitOne = async cnt => {
+    const p = curP(), b = curB(), fat = fatigueF(p);
+    const reps = ["直球", ...(p.rep || ["滑球"])].slice(0, 5);
+    msg(`選擇球路（數字鍵 1–${reps.length}）`);
+    const ctl = $e(".p3-ctl");
+    const name = await new Promise(res => { ctl.innerHTML = reps.map((n, i) => `<button class="p3-pt" type="button" data-i="${i}"><b>${i + 1}</b>${esc(n)}<small>${i ? `等級 ${p.brk}` : `${p.kmh}km/h`}</small></button>`).join("");
+      ctl.querySelectorAll(".p3-pt").forEach(bt => bt.addEventListener("click", ev => { ev.stopPropagation(); res(reps[+bt.dataset.i]); }));
+      abortFn = () => res(null); });
+    ctl.innerHTML = ""; if (!name || quit) return null;
+    const fbP = name === "直球", pt = fbP ? PTYPE[0][1] : ptOf(name);
+    msg(`瞄準進壘點，白圈縮到最小時 <b>點擊／空白鍵</b> 投出`);
+    P.cur.visible = P.curFill.visible = false; P.aim.visible = true;
+    const t0 = performance.now(); let k = 1;
+    const tgt = await new Promise(res => { onFrame = now => { k = .5 + .5 * Math.cos((now - t0) / 560 * Math.PI * 2); P.aim.scale.setScalar(.05 + .2 * k); P.aim.position.set(ptr.x, ptr.y, .01); P.aim.material.color.set(k < .12 ? 0x7ee2a8 : 0xffffff); };
+      clickFn = () => res({ x: ptr.x, y: ptr.y, k }); abortFn = () => res(null); });
+    clickFn = null; onFrame = null; P.aim.visible = false; if (!tgt || quit) return null;
+    msg("");
+    const sc = (.012 + .11 * tgt.k) * (1.45 - p.ctl / 110) / (.75 + .25 * fat);
+    const tx = tgt.x + gauss() * sc, ty = tgt.y + gauss() * sc;
+    const kmh = Math.round(fbP ? p.kmh * (.97 + .03 * fat) - ri(0, 2) : p.kmh * pt.v * (.97 + rnd() * .04)), T0 = KMH2T(kmh) * 1000;
+    await windup(620); if (quit) return null;
+    $e(".p3-pi").innerHTML = `<b>${kmh}</b><small>km/h</small><span>${esc(name)}</span>`;
+    // AI 打者：好球帶內大多會揮、壞球看選球；接觸看打擊 vs 球威、位置越邊角越難
+    const inz = inZone(tx, ty), edge = Math.max(Math.abs(tx) / ZX, Math.abs(ty - (ZY0 + ZY1) / 2) / ((ZY1 - ZY0) / 2));
+    const stuff = (p.velo * .55 + (fbP ? p.fb : p.brk) * .45) * fat * (1 + (1 - tgt.k) * .12);
+    const sw = rnd() < (inz ? clamp(.58 + (b.con - 60) / 300 + (cnt.s === 2 ? .2 : 0), .3, .95) : clamp(.42 - (b.eye - 50) / 160 + (cnt.s === 2 ? .15 : 0) - (edge > 1.6 ? .25 : 0), .03, .6));
+    const contact = sw && rnd() < clamp(.8 + (b.con - stuff) / 110 - Math.max(0, edge - .55) * .35 - (inz ? 0 : .22), .12, .96);
+    const path = pitchPath(pt, tx, ty, T0, P.pit.lefty);
+    let swung = false;
+    const r = await runPitch(path, T0, u => { if (sw && !swung && u >= .9 + (contact ? 0 : (rnd() - .5) * .2)) { swung = true; swingAnim(); } });
+    p3Pose(P.pit, "idle"); if (!r) return null;
+    const info = { kmh, name, inz, fb: fbP, pq: 1 - tgt.k, edge };
+    if (!sw) return { k: inz ? "strike" : "ball", look: 1, ...info };
+    if (!contact) return { k: "strike", whiff: 1, ...info };
+    if (rnd() < .34 + clamp(edge - .5, 0, .5) * .4) return { k: "foul", ...info, dir: (rnd() - .5) * 200 };
+    return { k: "inplay", q: clamp(1.1 - edge * .5 - (1 - tgt.k) * .2 + (b.con - stuff) / 200, .1, 1), dir: (rnd() - .5) * 160, ...info };
+  };
+
+  /* ---- 擊球飛行 ---- */
+  const flight = async (res, sub, dir, ub) => {
+    const T3 = THREE, fly = { HR: [125, 30], T: [95, 16], D: [88, 14], S: [55, 6], FO: [80, 26], SF: [78, 24], LO: [48, 4], PO: [28, 30], GO: [32, 0], DP: [30, 0], IF: [25, 0] };
+    const key = res === "OUT" ? sub : res === "S" && sub === "IF" ? "IF" : res, f = fly[key]; if (!f) return;
+    const lh = P.bat.lh, ang = clamp((dir || 0) / 160, -1, 1) * .62 * (lh ? -1 : 1) + (rnd() - .5) * .25;
+    const dist = f[0] * (.92 + rnd() * .16), end = new T3.Vector3(Math.sin(ang) * dist, 0, -Math.cos(ang) * dist), h = f[1], ms = key === "HR" ? 2300 : h > 20 ? 2100 : h > 5 ? 1300 : 1100;
+    // 最近的野手跑去接
+    let fk = null, fd = 1e9; for (const k in P.fld) { const q = P.fld[k].g.position, dd = Math.hypot(q.x - end.x, q.z - end.z); if (dd < fd) { fd = dd; fk = k; } }
+    const fl = P.fld[fk], f0 = fl.g.position.clone(), catchIt = !["S", "D", "T", "HR"].includes(res);
+    const fEnd = catchIt ? end.clone() : f0.clone().lerp(end, .6);
+    P.ball.visible = true; P.shadow.visible = true; P.cat.g.visible = P.ump.g.visible = true;
+    const t0 = performance.now();
+    await new Promise(r2 => { onFrame = now => { const u = Math.min(1, (now - t0) / ms);
+      const gx = end.x * u, gz = end.z * u, y = h ? 1 + Math.sin(u * Math.PI * (key === "HR" ? .82 : 1)) * h + (key === "HR" ? u * 6 : 0) : Math.max(.05, 1 - u * 3) + Math.abs(Math.sin(u * 10)) * .4 * (1 - u);
+      P.ball.position.set(gx, y, gz); P.shadow.position.set(gx, .03, gz);
+      const fu = Math.min(1, u * 1.15); fl.g.position.lerpVectors(f0, fEnd, fu); fl.g.lookAt(gx, 0, gz); p3Pose(fl, fu < 1 ? "run" : "idle");
+      if (P.run) P.run.forEach(rn => rn && p3Pose(rn, "run"));
+      const tgt = new T3.Vector3(gx * .7, Math.min(y, 20) * .5, gz * .7);
+      cam.position.lerp(new T3.Vector3(gx * .35, 18 + Math.min(y, 30) * .4, 24 + gz * .25), .06); cam.lookAt(tgt);
+      if (u >= 1 || quit) { onFrame = null; r2(); } }; abortFn = () => { onFrame = null; r2(); }; });
+    P.ball.visible = false; P.shadow.visible = false; void ub;
+  };
+
+  /* ---- 一個打席 ---- */
+  const atBat = async () => {
+    autoPitchCheck(false);
+    const userBat = G.half === G.uIdx;
+    if (!userBat && maybeAISteal()) { afterUserPlay(G.last); p3Board(P); await big(G.last.big || "盜壘", "", 1200); return; }
+    if (userBat && maybeAIIBB()) { afterUserPlay(G.last); p3Board(P); await big("故意四壞", "", 1200); return; }
+    p3Cast(P); P.bat.pose = "stance"; camBat(); p3Board(P);
+    const cnt = { b: 0, s: 0 }; let n = 0, fin = null;
+    P.cur.visible = P.curFill.visible = userBat; P.aim.visible = false; $e(".p3-ctl").innerHTML = ""; $e(".p3-pi").innerHTML = "";
+    while (!fin) {
+      hud(cnt);
+      const r = userBat ? await batOne(cnt) : await pitOne(cnt);
+      if (!r || quit) return;
+      n++;
+      if (r.k === "ball") { cnt.b++; await big(cnt.b >= 4 ? "四壞保送" : "壞球", userBat ? "good" : "bad", 650); if (cnt.b >= 4) fin = { forceRes: "BB" }; }
+      else if (r.k === "strike") { cnt.s++; await big(cnt.s >= 3 ? "三振！" : r.whiff ? `揮空${r.when ? "・" + r.when : ""}` : "好球", userBat ? "bad" : "good", 650); if (cnt.s >= 3) fin = { forceRes: "K" }; }
+      else if (r.k === "foul") { if (cnt.s < 2) cnt.s++; await big("界外球", "", 600); }
+      else fin = { inplay: true, q: r.q, dir: r.dir, info: r };
+    }
+    hud(cnt);
+    const pk = fin.info ? (fin.info.fb ? "FB" : "BR") : "FB";
+    const o = userBat ? { ba: UI.ba || "std", pa: aiPA(UI.ba || "std") } : { ba: aiBA(UI.pa || "std"), pa: UI.pa || "std" };
+    G.aceOn = G.aceOn || [0, 0];
+    if (G.aceOn[G.uIdx] > 0) { o[userBat ? "aceB" : "aceP"] = true; G.aceOn[G.uIdx]--; }
+    o.np = n;
+    if (fin.forceRes) o.forceRes = fin.forceRes;
+    else { o.inplay = true; const m = .82 + fin.q * .5; if (userBat) o.tqB = m; else o.tqP = 1.25 - fin.q * .4; G.tq = { n: fin.q > .6 ? "PERFECT" : fin.q > .35 ? "GOOD" : "OK", m }; }
+    const half0 = G.half;
+    userAct(() => doPA(pk, null, o));
+    const L = G.last;
+    if (fin.inplay && L) await flight(L.res, L.sub, fin.dir, userBat);
+    if (L) { const good = ["S", "D", "T", "HR", "BB", "HBP"].includes(L.res) === userBat; await big(L.big || bigLabel(L.res, L.sub, L.runs), good ? "good" : "bad", L.res === "HR" ? 1800 : 1200); if (L.runs) await big(`${L.runs} 分打回來！`, good ? "good" : "bad", 900); }
+    p3Board(P);
+    if (!G.over && G.half !== half0) await big(`攻守交換・${G.inn} 局${G.half ? "下" : "上"}`, "", 1200);
+  };
+  try { while (!quit && G && !G.over) await atBat(); }
+  catch (e) { console.error(e); toast("3D 球場發生錯誤：" + (e && e.message || e), 1); }
+  close();
+}
+ACT.park3d = () => park3d();
 </script>
 
 <script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script></body></html>
