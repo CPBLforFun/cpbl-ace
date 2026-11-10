@@ -7766,7 +7766,7 @@ function vFTrade() {
     return `<div class="mv-row">${cardHTML(x.card, { size: "xs" })}<div class="mv-i"><b>${rtag(p.r)} ${esc(p.n)}${yrTag(p)}</b><small class="dim">Lv <b class="amb">${x.card.lv}</b>／${maxLv(x.card)}・總評 ${cOvr(x.card)}・掛價 <b class="amb">${fmt(x.p)}</b></small>${trClock(x.at)}${!trExp(x) && w > 0 && !trHigh(p.r) ? `<small class="dim">${trLeft(w)}後可以提早賣給系統</small>` : ""}</div>
       <div class="mv-b">${w <= 0 ? `<button class="btn sm" data-a="trRecyc" data-l="${x.l}">賣給系統 ${fmt(trRecycG(p.r))}</button>` : ""}<button class="btn sm ${trExp(x) ? "pri" : "ghost"}" data-a="trBack" data-l="${x.l}">${trExp(x) ? "退還" : "下架"}</button></div></div>`; }).join("");
   const can = myCards().filter(trOk).sort((a, b) => RANK[PDB[b.pid].r] - RANK[PDB[a.pid].r] || cOvr(b) - cOvr(a)).slice(0, 60);
-  const offers = []; (ok ? frMutual() : []).forEach(d => (Array.isArray(d.mk) ? d.mk : []).forEach(m => { if (m && m.c && PDB[m.c.pid] && !trGone(m) && trPriceOk(PDB[m.c.pid].r, Math.round(m.pk * 1000))) offers.push({ d, m }); }));
+  const offers = []; (ok ? frMutual() : []).concat(ctMkDocs()).forEach(d => (Array.isArray(d.mk) ? d.mk : []).forEach(m => { if (m && m.c && PDB[m.c.pid] && !trGone(m) && trPriceOk(PDB[m.c.pid].r, Math.round(m.pk * 1000))) offers.push({ d, m }); }));
   offers.sort((a, b) => RANK[PDB[b.m.c.pid].r] - RANK[PDB[a.m.c.pid].r] || b.m.pk - a.m.pk);
   const offerRow = ({ d, m }) => { const p = PDB[m.c.pid], pr = Math.round(m.pk * 1000), mine = T.bq.some(q => q.s === d.id && q.l === m.l);
     return `<div class="mv-row">${cardHTML(trShow(m), { size: "xs" })}<div class="mv-i"><b>${rtag(p.r)} ${esc(p.n)}${yrTag(p)}</b><small class="dim">Lv <b class="amb">${trShow(m).lv}</b>／${maxLv(trShow(m))}・總評 ${cOvr(trShow(m))}・賣家 ${esc(frName(d))}・<b class="amb">${fmt(pr)}</b></small>${trClock(trAt(m))}</div>
@@ -7776,11 +7776,11 @@ function vFTrade() {
     : FRD.st === "na" || FRD.st === "err" ? `<p class="dim" style="margin:6px 0 0">目前連不上好友資料，只能掛單後賣給系統回收。</p>` : FRD.st !== "ok" ? `<p class="dim" style="margin:6px 0 0">讀取好友資料中…</p>` : "";
   const when = ms => new Date(ms).toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
   return `${hd("FRIEND TRADE", "好友交易", `<span class="muted">持有 ${fmt(S.tokens)} 代幣</span>`)}
-  <details class="panel tr-rd"><summary>交易規則 <span class="dim">（點開看）</span></summary>${trRules()}</details>${st ? `<div class="panel">${st}</div>` : ""}${bsPanel()}
+  <details class="panel tr-rd"><summary>交易規則 <span class="dim">（點開看）</span></summary>${trRules()}</details>${st && !SB ? `<div class="panel">${st}</div>` : ""}${bsPanel()}
   <div class="mv-g">
     <div class="panel"><h3>我的掛單 <span class="dim" style="letter-spacing:0;font-weight:400">${T.my.length} / ${TR_MAX}</span></h3><div class="mv-list">${mine || `<p class="dim">還沒有掛單。從下面挑一張用不到的卡掛出去。</p>`}</div>
       <h4 class="subh" style="margin-top:12px">可以掛賣的卡</h4><div class="mv-list">${can.map(c => { const p = PDB[c.pid]; return `<div class="mv-row">${cardHTML(c, { size: "xs", act: "detail", click: 1 })}<div class="mv-i"><b>${rtag(p.r)} ${esc(p.n)}${yrTag(p)}</b><small class="dim">Lv ${c.lv}・總評 ${cOvr(c)}・${trHigh(p.r) ? `${fmt(TR_RANGE[p.r][0])}～${fmt(TR_RANGE[p.r][1])}` : fmt(MKT[p.r])}</small></div><div class="mv-b"><button class="btn sm" data-a="trSell" data-uid="${c.uid}">掛賣</button></div></div>`; }).join("") || `<p class="dim">沒有可以掛賣的卡（陣容中、上鎖、新星卡不能賣）。</p>`}</div></div>
-    <div class="panel"><h3>好友的掛單 <span class="dim" style="letter-spacing:0;font-weight:400">${offers.length} 張</span></h3><div class="mv-list">${offers.map(offerRow).join("") || `<p class="dim">${ok ? "好友目前沒有掛單。" : "互加好友後，這裡會列出他們掛賣的卡。"}</p>`}</div>
+    <div class="panel"><h3>好友的掛單 <span class="dim" style="letter-spacing:0;font-weight:400">${offers.length} 張</span></h3><div class="mv-list">${offers.map(offerRow).join("") || `<p class="dim">${ok || ctMkDocs.n ? "好友目前沒有掛單。" : "互加好友後，這裡會列出他們掛賣的卡。"}</p>`}</div>
       ${pend ? `<h4 class="subh" style="margin-top:12px">等待成交</h4><div class="mv-list">${pend}</div>` : ""}
       ${T.log.length ? `<h4 class="subh" style="margin-top:12px">交易紀錄</h4><div class="rw-log">${T.log.slice(0, 15).map(h => `<div><span class="dim">${when(h.at)}</span><b>${esc(h.t)}</b><small>${h.tok ? `${h.tok > 0 ? "+" : ""}${fmt(h.tok)} 代幣` : ""}</small></div>`).join("")}</div>` : ""}</div>
   </div>`;
@@ -8586,11 +8586,16 @@ async function sb(path, o = {}) {
 const rpc = (fn, b) => sb("rpc/" + fn, { m: "POST", b });
 /* 上傳我的名片（陣容或可交換卡有變才傳） */
 async function ctPush(force) {
-  const s = frSnap(), key = [s.sh, ofrNm(), otKey(), S.team].join("|");
+  const s = frSnap(), mk = ctMyMk(), key = [s.sh, ofrNm(), otKey(), S.team, CT.noMk ? "" : JSON.stringify(mk)].join("|");
   if (!force && CT.push === key) return;
   const C = ctS();
-  await sb("players?on_conflict=id", { m: "POST", prefer: "resolution=merge-duplicates,return=minimal",
-    b: { id: C.uid, code: ofrId(), name: ofrNm(), team: S.team, pw: s.pw | 0, side: s.side, cust: s.cust, tl: otList(), updated_at: new Date().toISOString() } });
+  const body = { id: C.uid, code: ofrId(), name: ofrNm(), team: S.team, pw: s.pw | 0, side: s.side, cust: s.cust, tl: otList(), updated_at: new Date().toISOString() };
+  if (!CT.noMk) body.mk = mk;
+  try { await sb("players?on_conflict=id", { m: "POST", prefer: "resolution=merge-duplicates,return=minimal", b: body }); }
+  catch (e) {
+    if (!CT.noMk && /mk/.test(e.message)) { CT.noMk = 1; delete body.mk; return ctPush(1); }
+    if (/players_code_key/.test(e.message) && !CT.recode) { CT.recode = 1; S.frId = null; UI.ofrC = null; body.code = ofrId(); save(); return ctPush(1); }   // 好友碼撞號（換了新身分）：換一組新的
+    throw e; }
   CT.push = key;
 }
 async function ctAdd(code) {
@@ -8619,18 +8624,23 @@ async function ctSync(force) {
     if (pf) { try { sessionStorage.removeItem("cpaF"); } catch (e) { } if (pf !== ofrId()) { try { await rpc("add_friend", { fcode: pf }); UI.ctNew = pf; } catch (e) { toast("邀請連結的好友碼找不到", 1); } } }
     const fr = await sb(`friends?select=b&a=eq.${C.uid}`) || [];
     const ids = fr.map(x => x.b);
-    const ps = ids.length ? await sb(`players?select=id,code,name,team,pw,side,cust,tl,updated_at&id=in.(${ids.join(",")})`) || [] : [];
+    const q0 = `&id=in.(${ids.join(",")})`;
+    let ps = [];
+    if (ids.length) { try { ps = await sb(`players?select=id,code,name,team,pw,side,cust,tl,updated_at${CT.noMk ? "" : ",mk"}${q0}`) || []; }
+      catch (e) { if (!CT.noMk && /mk/.test(e.message)) { CT.noMk = 1; ps = await sb(`players?select=id,code,name,team,pw,side,cust,tl,updated_at${q0}`) || []; } else throw e; } }
     S.ofr = S.ofr || {};
     const seen = new Set();
     ps.forEach(p => { const id = p.code; seen.add(id); const old = S.ofr[id] || {};
       if (!p.side) return;
-      S.ofr[id] = { ...old, id, uid: p.id, cloud: 1, n: frName({ n: p.name }), team: clamp(+p.team || 0, 0, TEAMS.length - 1), side: p.side, cust: p.cust || {}, pw: clamp(+p.pw || 0, 0, 300), at: Date.parse(p.updated_at) || Date.now(), tl: otClean(p.tl), w: old.w || 0, l: old.l || 0, t: old.t || 0 }; });
+      S.ofr[id] = { ...old, id, uid: p.id, cloud: 1, n: frName({ n: p.name }), team: clamp(+p.team || 0, 0, TEAMS.length - 1), side: p.side, cust: p.cust || {}, pw: clamp(+p.pw || 0, 0, 300), at: Date.parse(p.updated_at) || Date.now(), tl: otClean(p.tl), mk: Array.isArray(p.mk) ? p.mk.slice(0, TR_MAX) : [], w: old.w || 0, l: old.l || 0, t: old.t || 0 }; });
     Object.values(S.ofr).forEach(o => { if (o.cloud && !seen.has(o.id)) delete S.ofr[o.id]; });
     if (UI.ctNew && S.ofr[UI.ctNew]) { toast(`已透過邀請連結加 ${S.ofr[UI.ctNew].n} 為好友！`); UI.ctNew = null; }
     // 交易
     const since = new Date(Date.now() - 14 * 864e5).toISOString();
     const tr = await sb(`trades?select=*&or=(from_id.eq.${C.uid},to_id.eq.${C.uid})&updated_at=gt.${since}&order=created_at.desc&limit=200`) || [];
-    CT.inT = tr.filter(t => t.to_id === C.uid && t.status === "pending");
+    CT.inT = tr.filter(t => t.to_id === C.uid && t.status === "pending" && !(t.want && t.want.mk));
+    await ctMkSell(tr.filter(t => t.to_id === C.uid && t.status === "pending" && t.want && t.want.mk));
+    await ctMkBuy(tr.filter(t => t.from_id === C.uid && t.want && t.want.mk));
     for (const t of tr) {
       const x = S.ctOut[t.id]; if (!x || t.from_id !== C.uid) continue;
       x.st = t.status;
@@ -9017,7 +9027,7 @@ function p3Board(P) {
 /* 守備位置（打者方向：本壘在原點，投手丘在 -z） */
 const FPOS = { P: [0, -18.44], C: [0, 1.05], "1B": [16.5, -22], "2B": [6.5, -31], SS: [-6.5, -31], "3B": [-16.5, -22], LF: [-30, -72], CF: [0, -86], RF: [30, -72] };
 const BASEP = [[19.4, -19.4], [0, -38.8], [-19.4, -19.4]];
-function p3Cast(P) {
+function p3CastV1(P) {
   const T = THREE; P.figs.forEach(f => { P.sc.remove(f.g); f.g.traverse(o => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } }); }); P.figs = [];
   const bs = batSide(), fs = fldSide(), b = curB(), p = curP(), lh = (b.bats || "R") === "L";
   const col = s => new T.Color(TEAMS[s.tid] ? TEAMS[s.tid].c : (s.c || "#c8102e"));
@@ -9036,7 +9046,7 @@ function p3Cast(P) {
   p3Pose(P.bat, "stance", 0);
 }
 /* 動作 */
-function p3Pose(f, k, u) {
+function p3PoseV1(f, k, u) {
   if (!f) return;
   const s = f.lh ? -1 : 1;
   if (k === "stance") { f.up.rotation.set(0, 0, 0); f.armR.rotation.set(-2.4, 0, -.3 * s); f.armL.rotation.set(-2.2, 0, .5 * s); if (f.bat) f.bat.rotation.set(.4, 0, 0); f.up.position.y = .5 + Math.sin(performance.now() / 260) * .015; }
@@ -9074,7 +9084,7 @@ async function park3d() {
   const camBat = () => { const lh = P.bat && P.bat.lh; cam.position.set(lh ? .5 : -.5, 1.9, 3.7); cam.lookAt(lh ? -.15 : .15, .95, -10); };
   camBat();
   let alive = true, quit = false, raf, onFrame = null;
-  const loop = now => { if (!alive) return; if (onFrame) onFrame(now); if (P.bat && P.bat.pose === "stance") p3Pose(P.bat, "stance", 0); R.render(P.sc, cam); raf = requestAnimationFrame(loop); };
+  const loop = now => { if (!alive) return; if (onFrame) onFrame(now); p3Tick(P, now); R.render(P.sc, cam); raf = requestAnimationFrame(loop); };
   raf = requestAnimationFrame(loop);
   // 指標
   const ray = new T.Raycaster(), plane = new T.Plane(new T.Vector3(0, 0, 1), 0), hit = new T.Vector3();
@@ -9107,21 +9117,24 @@ async function park3d() {
   };
   /* 投一球：回傳球的軌跡函式 */
   const pitchPath = (pt, tx, ty, T0, lefty) => {
-    const rel = new T.Vector3(lefty ? -.55 : .55, 1.95, -17.3), side = lefty ? -1 : 1, bm = .55 + curP().brk / 140;
+    const rel = new T.Vector3(lefty ? .5 : -.5, 1.95, -17.3), side = lefty ? -1 : 1, bm = .55 + curP().brk / 140;
     const dx = pt.dx * side * bm, dy = pt.dy * bm, aim = new T.Vector3(tx - dx, ty - dy, 0);
     return u => { const e = Math.pow(Math.max(0, u - .35) / .65, 2.2), fl = pt.flutter ? Math.sin(u * 19) * .05 * u : 0;
       return new T.Vector3(rel.x + (aim.x - rel.x) * u + dx * e + fl, rel.y + (aim.y - rel.y) * u + dy * e + Math.sin(u * Math.PI) * .18 * (1.05 - pt.v), rel.z + (0 - rel.z) * u); };
   };
   const inZone = (x, y) => Math.abs(x) <= ZX + .037 && y >= ZY0 - .037 && y <= ZY1 + .037;
-  const runPitch = (path, T0, onT) => new Promise(res => {
+  let runPitch = (path, T0, onT) => new Promise(res => {
     const t0 = performance.now(); P.ball.visible = true; P.shadow.visible = true; let done = false;
     abortFn = () => { if (!done) { done = true; onFrame = null; res(null); } };
     onFrame = now => { const u = (now - t0) / T0; const q = path(Math.min(u, 1.25)); P.ball.position.copy(q); P.shadow.position.set(q.x, .02, q.z); if (onT) onT(u, now);
       if (u >= 1.25 && !done) { done = true; onFrame = null; P.ball.visible = false; P.shadow.visible = false; res(true); } };
   });
-  const windup = (ms) => new Promise(res => { const t0 = performance.now(); P.pit.g.position.y = .25;
-    onFrame = now => { const u = (now - t0) / ms; p3Pose(P.pit, "pitch", Math.min(1, u * .82)); if (u >= 1) { onFrame = null; res(); } }; });
-  const swingAnim = () => { const t0 = performance.now(); P.bat.pose = "swing"; const f = () => { const u = (performance.now() - t0) / 170; p3Pose(P.bat, "swing", u); if (u < 1.6 && alive) requestAnimationFrame(f); else { P.bat.pose = "stance"; } }; requestAnimationFrame(f); };
+  const windup = () => new Promise(res => { P.pit.g.position.y = .25; p3Play(P.pit, "windup"); p3Play(P.bat, "load", { blend: .25 });
+    const prev = onFrame, t0 = performance.now();
+    onFrame = now => { if (prev) prev(now); if (now - t0 >= P3W * 1000 || quit) { onFrame = prev; p3Play(P.pit, "follow", { blend: 0, next: "set" }); res(); } }; });
+  const swingAnim = h => { P.bat.pose = "swing"; p3Play(P.bat, "swing", { h: h == null ? ptr.y : h, blend: .03, next: "stance" }); };
+  const runPitch1 = runPitch;
+  runPitch = async (path, T0, onT) => { const r = await runPitch1(path, T0, onT); if (P.bat && P.bat.clip && P.bat.clip.name === "load") p3Play(P.bat, "stance", { blend: .45 }); return r; };
 
   /* ---- 玩家打擊：一球 ---- */
   const batOne = async cnt => {
@@ -9190,7 +9203,7 @@ async function park3d() {
     const contact = sw && rnd() < clamp(.8 + (b.con - stuff) / 110 - Math.max(0, edge - .55) * .35 - (inz ? 0 : .22), .12, .96);
     const path = pitchPath(pt, tx, ty, T0, P.pit.lefty);
     let swung = false;
-    const r = await runPitch(path, T0, u => { if (sw && !swung && u >= .9 + (contact ? 0 : (rnd() - .5) * .2)) { swung = true; swingAnim(); } });
+    const r = await runPitch(path, T0, u => { if (sw && !swung && u >= .9 + (contact ? 0 : (rnd() - .5) * .2)) { swung = true; swingAnim(ty); } });
     p3Pose(P.pit, "idle"); if (!r) return null;
     const info = { kmh, name, inz, fb: fbP, pq: 1 - tgt.k, edge };
     if (!sw) return { k: inz ? "strike" : "ball", look: 1, ...info };
@@ -9207,7 +9220,7 @@ async function park3d() {
     const dist = f[0] * (.92 + rnd() * .16), end = new T3.Vector3(Math.sin(ang) * dist, 0, -Math.cos(ang) * dist), h = f[1], ms = key === "HR" ? 2300 : h > 20 ? 2100 : h > 5 ? 1300 : 1100;
     // 最近的野手跑去接
     let fk = null, fd = 1e9; for (const k in P.fld) { const q = P.fld[k].g.position, dd = Math.hypot(q.x - end.x, q.z - end.z); if (dd < fd) { fd = dd; fk = k; } }
-    const fl = P.fld[fk], f0 = fl.g.position.clone(), catchIt = !["S", "D", "T", "HR"].includes(res);
+    const fl = P.fld[fk], f0 = fl.g.position.clone(), catchIt = !["S", "D", "T", "HR"].includes(res); fl.catchH = catchIt ? h : null;
     const fEnd = catchIt ? end.clone() : f0.clone().lerp(end, .6);
     P.ball.visible = true; P.shadow.visible = true; P.cat.g.visible = P.ump.g.visible = true;
     const t0 = performance.now();
@@ -9215,7 +9228,10 @@ async function park3d() {
       const gx = end.x * u, gz = end.z * u, y = h ? 1 + Math.sin(u * Math.PI * (key === "HR" ? .82 : 1)) * h + (key === "HR" ? u * 6 : 0) : Math.max(.05, 1 - u * 3) + Math.abs(Math.sin(u * 10)) * .4 * (1 - u);
       P.ball.position.set(gx, y, gz); P.shadow.position.set(gx, .03, gz);
       const fu = Math.min(1, u * 1.15); fl.g.position.lerpVectors(f0, fEnd, fu); fl.g.lookAt(gx, 0, gz); p3Pose(fl, fu < 1 ? "run" : "idle");
-      if (P.run) P.run.forEach(rn => rn && p3Pose(rn, "run"));
+      if (P.run) P.run.forEach((rn, i) => { if (!rn) return; const nb = i < 2 ? BASEP[i + 1] : [0, 0]; if (!rn.s0) rn.s0 = rn.g.position.clone();
+        rn.g.position.set(rn.s0.x + (nb[0] - rn.s0.x) * u * .85, 0, rn.s0.z + (nb[1] - rn.s0.z) * u * .85); rn.g.lookAt(nb[0], 0, nb[1]); p3Pose(rn, "run"); });
+      if (u > .06) { const B = P.bat; if (!B.s0) { B.s0 = B.g.position.clone(); B.batDrop = 1; } const v = Math.min(1, (u - .06) * 1.1) * .7;
+        B.g.position.set(B.s0.x + (19.4 - B.s0.x) * v, 0, B.s0.z + (-19.4 - B.s0.z) * v); B.g.lookAt(19.4, 0, -19.4); p3Pose(B, "run"); }
       const tgt = new T3.Vector3(gx * .7, Math.min(y, 20) * .5, gz * .7);
       cam.position.lerp(new T3.Vector3(gx * .35, 18 + Math.min(y, 30) * .4, 24 + gz * .25), .06); cam.lookAt(tgt);
       if (u >= 1 || quit) { onFrame = null; r2(); } }; abortFn = () => { onFrame = null; r2(); }; });
@@ -9262,6 +9278,325 @@ async function park3d() {
   close();
 }
 ACT.park3d = () => park3d();
+
+/* =========================================================
+   v50 好友掛單（線上好友）
+   ========================================================= */
+const ctMyMk = () => trS().my.filter(x => !trExp(x)).map(x => ({ l: x.l, c: trPack(x.card), pk: x.p / 1000, at: new Date(x.at).toISOString() }));
+function ctMkDocs() {
+  const L = Object.values((S && S.ofr) || {}).filter(o => o.cloud && o.uid).map(o => ({ id: "c:" + o.uid, n: o.n, mk: o.mk || [], uid: o.uid }));
+  ctMkDocs.n = L.length; return L;
+}
+/* 買 */
+function ctBuy(s, l) {
+  const uid = s.slice(2), o = Object.values(S.ofr || {}).find(x => x.cloud && x.uid === uid), m = o && (o.mk || []).find(x => x && x.l === l);
+  const T = trS();
+  if (!m || !m.c || !PDB[m.c.pid] || trGone(m)) return toast("這張卡已經下架或流售", 1);
+  const p = Math.round(m.pk * 1000), pp = PDB[m.c.pid];
+  if (!trPriceOk(pp.r, p)) return toast("這筆掛單的價格不符合規則，不能購買", 1);
+  if (T.bq.some(q => q.s === s && q.l === l)) return toast("你已經下單了，等賣家上線成交", 1);
+  if (pp.leg && (myCards().some(c => c.pid === pp.id) || T.bq.some(q => q.card.pid === pp.id))) return toast("傳奇卡一人只能有一張", 1);
+  if (S.tokens < p) return toast(`代幣不足，需要 ${fmt(p)}`, 1);
+  askYes(`用 ${fmt(p)} 代幣向 ${esc(o.n)} 買 ${rtag(pp.r)} ${esc(pp.n)}？`, async () => {
+    if (S.tokens < p) return toast("代幣不足", 1);
+    let r; try { const C = await ctAuth(); r = await sb("trades", { m: "POST", b: { from_id: C.uid, to_id: uid, give: { tok: p, pid: m.c.pid }, want: { mk: 1, l, pid: m.c.pid, tok: p } } }); }
+    catch (e) { return toast("下單失敗：" + (/row-level/.test(e.message) ? "對方不是你的好友，或進行中的交易太多" : e.message), 1); }
+    const t = r && r[0]; if (!t) return toast("下單失敗", 1);
+    S.tokens -= p; T.bq.push({ s, l, p, card: m.c, sn: o.n, at: Date.now(), cloud: 1, tid: t.id });
+    trLog(`向 ${o.n} 下單 ${pp.n}`, -p); save(); render(); renderTop();
+    toast(`已下單，${fmt(p)} 代幣先扣住。${o.n} 上線時會自動成交`);
+    ctSync(1);
+  });
+}
+/* 賣家：好友下單就自動成交（先到先得；已下架／流售／價格不對就拒絕） */
+async function ctMkSell(L) {
+  if (!L.length) return;
+  const T = trS(); let ch = 0;
+  L.sort((a, b) => a.created_at < b.created_at ? -1 : 1);
+  for (const t of L) {
+    const x = T.my.find(m => m.l === t.want.l), price = t.give && Math.round(+t.give.tok || 0);
+    const nm = (Object.values(S.ofr || {}).find(o => o.uid === t.from_id) || {}).n || "好友";
+    if (!x || trExp(x) || x.p !== price || t.want.pid !== x.card.pid) { try { await rpc("trade_step", { tid: t.id, act: "decline", payload: null }); } catch (e) { } continue; }
+    let r; try { r = await rpc("trade_step", { tid: t.id, act: "accept", payload: trPack(x.card) }); } catch (e) { continue; }
+    if (r !== "ok") continue;
+    T.my.splice(T.my.indexOf(x), 1); trGift(`好友交易：${nm} 買下 ${PDB[x.card.pid].n}`, x.p);
+    T.sold.unshift({ l: x.l, b: t.from_id, pk: x.p / 1000, at: new Date().toISOString() }); T.sold.length = Math.min(T.sold.length, 30);
+    trLog(`賣給 ${nm}：${PDB[x.card.pid].n}`, x.p); ch = 1;
+    toast(`${nm} 買下了你的 ${PDB[x.card.pid].n}，${fmt(x.p)} 代幣已放進禮物盒`);
+  }
+  if (ch) { CT.push = ""; save(); renderTop(); }
+}
+/* 買家：成交就收卡；被拒絕（已賣掉／下架）或取消就退款 */
+async function ctMkBuy(L) {
+  const T = trS(); let ch = 0;
+  for (const q of [...T.bq]) {
+    if (!q.cloud) continue;
+    const t = L.find(x => x.id === q.tid); if (!t) continue;
+    if (t.status === "accepted") {
+      let r; try { r = await rpc("trade_step", { tid: t.id, act: "claim", payload: null }); } catch (e) { continue; }
+      if (r !== "ok") continue;
+      T.bq.splice(T.bq.indexOf(q), 1); const c = trUnpack(t.got);
+      if (c) { trLog(`向 ${q.sn} 買到 ${PDB[c.pid].n}`, 0); toast(`交易成功！${PDB[c.pid].n} 已經放進背包`); } else { S.tokens += q.p; trLog("卡片資料有誤，已退款", q.p); }
+      ch = 1;
+    } else if (t.status === "declined" || t.status === "cancelled") {
+      T.bq.splice(T.bq.indexOf(q), 1); S.tokens += q.p; ch = 1;
+      trLog(`沒買到 ${PDB[q.card.pid] ? PDB[q.card.pid].n : ""}（已被買走或下架），退款`, q.p);
+      toast(`沒買到 ${PDB[q.card.pid] ? PDB[q.card.pid].n : "卡"}（已被買走或下架），${fmt(q.p)} 代幣已退回`);
+    }
+  }
+  if (ch) { save(); renderTop(); }
+}
+async function ctBuyCancel(s, l) {
+  const T = trS(), q = T.bq.find(x => x.s === s && x.l === l); if (!q) return;
+  let r; try { r = await rpc("trade_step", { tid: q.tid, act: "cancel", payload: null }); } catch (e) { return toast("取消失敗：" + e.message, 1); }
+  if (r !== "ok") { toast("賣家已經處理這筆下單了，正在同步…"); return ctSync(1); }
+  T.bq.splice(T.bq.indexOf(q), 1); S.tokens += q.p; trLog(`取消下單，退回`, q.p); save(); render(); renderTop(); toast(`已取消，${fmt(q.p)} 代幣退回`);
+}
+if (SB) {
+  const _buy = ACT.trBuy, _can = ACT.trCancel;
+  ACT.trBuy = el => String(el.dataset.s).startsWith("c:") ? ctBuy(el.dataset.s, el.dataset.l) : _buy(el);
+  ACT.trCancel = el => String(el.dataset.s).startsWith("c:") ? askYes("取消這筆下單、退回代幣？", () => ctBuyCancel(el.dataset.s, el.dataset.l)) : _can(el);
+  // 掛單／下架後馬上上傳，好友頁打開時也同步
+  const _tc = trCloud;
+  trCloud = function () { const r = _tc.apply(this, arguments); CT.push = ""; setTimeout(() => ctSync(1), 0); return r; };
+  const _vft = vFTrade;
+  vFTrade = function () { setTimeout(() => ctSync(), 0); return _vft(); };
+}
+
+/* =========================================================
+   v51 3D 球員：真實比例＋骨架動畫
+   ========================================================= */
+const P3W = 1.05;                         // 投手從固定到出手的秒數
+let P3UP = null;
+const P3K = { g: {}, m: {} };
+const p3Geo = (k, mk) => P3K.g[k] || ((P3K.g[k] = mk()).__k = k, P3K.g[k]);
+const p3Mat = (c, o) => { const k = c + JSON.stringify(o || {}); return P3K.m[k] || (P3K.m[k] = new THREE.MeshStandardMaterial({ color: c, roughness: .78, metalness: 0, ...(o || {}) })); };
+const p3Lathe = (pts, seg) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg || 20);
+// 膠囊：從 y=0 往下長 len，上端半徑 r1、下端 r2
+const p3Cap = (r1, r2, len) => p3Geo(`cap${r1},${r2},${len}`, () => { const p = [], n = 5;
+  for (let i = 0; i <= n; i++) { const a = -Math.PI / 2 + Math.PI / 2 * i / n; p.push([Math.max(.001, Math.cos(a) * r2), -len + Math.sin(a) * r2]); }
+  for (let i = 0; i <= n; i++) { const a = Math.PI / 2 * i / n; p.push([Math.max(.001, Math.cos(a) * r1), Math.sin(a) * r1]); }
+  return p3Lathe(p, 14); });
+const p3Hash = s => { let h = 7; for (const ch of String(s || "")) h = (h * 31 + ch.charCodeAt(0)) % 9973; return h; };
+const p3Num = s => String(p3Hash(s) % 98 + 1);
+const p3Skin = s => [0xf0c8a2, 0xe6b48c, 0xd8a277, 0xc98f63][p3Hash(s) % 4];
+
+function p3Fig(o) {
+  const T = THREE; if (!P3UP) P3UP = new T.Vector3(0, 1, 0);
+  const M = p3Mat, g = new T.Group(), own = [];
+  const cJ = new T.Color(o.c), cT = o.c2 != null ? new T.Color(o.c2) : cJ.clone().multiplyScalar(.5);
+  const jer = M(cJ.getHex()), trim = M(cT.getHex()), pants = M(o.pants != null ? o.pants : 0xf2f0ea), skin = M(o.skin || 0xe6b48c, { roughness: .62 }),
+    dark = M(0x18191d, { roughness: .5 }), capM = M(o.cap != null ? o.cap : cJ.getHex(), { roughness: o.helmet ? .28 : .72 });
+  const mesh = (par, geo, mat, x, y, z) => { const m = new T.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); m.castShadow = true; par.add(m); return m; };
+  const grp = (par, x, y, z) => { const q = new T.Group(); q.position.set(x, y, z); q.rotation.order = "YXZ"; par.add(q); return q; };
+  const hips = grp(g, 0, .95, 0), spine = grp(hips, 0, .1, 0), chest = grp(spine, 0, .24, 0), head = grp(chest, 0, .25, 0);
+  // 骨盆、腰帶、腹部
+  mesh(hips, p3Geo("pel", () => new T.SphereGeometry(.155, 20, 14)), pants, 0, -.02, 0).scale.set(1, .72, .78);
+  mesh(hips, p3Geo("belt", () => new T.CylinderGeometry(.146, .15, .045, 20)), dark, 0, .075, 0).scale.z = .76;
+  mesh(spine, p3Geo("abd", () => p3Lathe([[.001, -.08], [.125, -.07], [.142, -.01], [.138, .08], [.148, .2], [.152, .27]])), jer).scale.z = .74;
+  // 胸（背號、胸前隊名）
+  const tex = texText(256, 128, (c, w, h) => {
+    c.fillStyle = "#" + cJ.getHexString(); c.fillRect(0, 0, w, h);
+    c.textAlign = "center"; c.textBaseline = "middle"; c.lineJoin = "round"; c.strokeStyle = "#" + cT.getHexString(); c.fillStyle = "#fff";
+    if (o.num) { c.font = "bold 54px sans-serif"; c.lineWidth = 7; c.strokeText(o.num, 128, 64); c.fillText(o.num, 128, 64); }
+    if (o.ab) { c.font = "bold 20px sans-serif"; c.lineWidth = 4; [0, 256].forEach(x => { c.strokeText(o.ab, x, 54); c.fillText(o.ab, x, 54); }); }
+  });
+  const jT = new T.MeshStandardMaterial({ map: tex, roughness: .8 }); own.push(tex, jT);
+  mesh(chest, p3Geo("cst", () => p3Lathe([[.15, -.08], [.168, 0], [.188, .08], [.195, .13], [.18, .185], [.13, .225], [.06, .245], [.001, .25]], 24)), jT).scale.z = .66;
+  if (o.catcher) mesh(chest, p3Geo("cpro", () => new T.BoxGeometry(.3, .34, .07)), dark, 0, .06, .11);
+  // 頭
+  mesh(chest, p3Geo("neck", () => new T.CylinderGeometry(.048, .056, .13, 12)), skin, 0, .26, 0);
+  mesh(head, p3Geo("head", () => new T.SphereGeometry(.108, 22, 16)), skin, 0, .1, .01).scale.set(.92, 1.08, 1);
+  mesh(head, p3Geo("hair", () => new T.SphereGeometry(.11, 18, 12, 0, Math.PI * 2, 0, Math.PI * .62)), dark, 0, .11, -.014);
+  [-1, 1].forEach(s => { mesh(head, p3Geo("ear", () => new T.SphereGeometry(.026, 10, 8)), skin, s * .098, .09, 0).scale.set(.5, 1, .8);
+    mesh(head, p3Geo("eye", () => new T.SphereGeometry(.013, 8, 6)), dark, s * .037, .112, .094); });
+  mesh(head, p3Geo("nose", () => new T.SphereGeometry(.017, 8, 6)), skin, 0, .088, .108);
+  const half = (r, k) => p3Geo(k, () => new T.CylinderGeometry(r, r, .012, 20, 1, false, -Math.PI / 2, Math.PI));
+  if (o.helmet) {
+    mesh(head, p3Geo("helm", () => new T.SphereGeometry(.132, 24, 14, 0, Math.PI * 2, 0, Math.PI * .56)), capM, 0, .112, -.006);
+    mesh(head, p3Geo("flap", () => new T.SphereGeometry(.075, 14, 10)), capM, o.helmet * .1, .07, 0).scale.set(.42, 1, .9);
+    const b = mesh(head, half(.11, "hbrim"), capM, 0, .118, .095); b.rotation.x = .14; b.scale.z = .6;
+  } else {
+    mesh(head, p3Geo("cap", () => new T.SphereGeometry(.118, 22, 12, 0, Math.PI * 2, 0, Math.PI / 2)), capM, 0, .122, 0);
+    const b = mesh(head, half(.1, "brim"), capM, 0, .124, .085); b.rotation.x = .18; b.scale.z = 1.3;
+  }
+  // 手
+  const arm = {}, leg = {}; let ball = null;
+  [["l", 1], ["r", -1]].forEach(([s, sx]) => {
+    const u = grp(chest, sx * .19, .155, 0);
+    mesh(u, p3Cap(.05, .042, .29), skin); mesh(u, p3Cap(.063, .057, .12), jer);
+    const e = grp(u, 0, -.29, 0); mesh(e, p3Cap(.043, .033, .27), skin);
+    const h = grp(e, 0, -.27, 0); mesh(h, p3Geo("hand", () => new T.SphereGeometry(.04, 12, 10)), o.bat ? M(0xf4f4f0) : skin, 0, -.035, 0).scale.set(.85, 1.2, .65);
+    if (o.glove === s) mesh(h, p3Geo("glove", () => new T.SphereGeometry(.1, 16, 12)), M(0x7a4a22, { roughness: .6 }), 0, -.07, .025).scale.set(o.catcher ? .95 : .75, o.catcher ? 1.1 : 1.25, .42);
+    if (o.ball === s) ball = mesh(h, p3Geo("hball", () => new T.SphereGeometry(.037, 12, 10)), M(0xffffff), 0, -.075, .035);
+    arm[s] = { u, e, h };
+    // 腳
+    const th = grp(hips, sx * .093, -.04, 0); mesh(th, p3Cap(.082, .064, .43), pants);
+    const k = grp(th, 0, -.43, 0); mesh(k, p3Cap(.067, .06, .13), pants); mesh(k, p3Cap(.058, .041, .42), o.catcher ? dark : trim);
+    const a = grp(k, 0, -.42, 0); mesh(a, p3Geo("foot", () => new T.BoxGeometry(.1, .075, .27)), dark, 0, -.035, .06);
+    leg[s] = { u: th, k, a };
+  });
+  // 球棒
+  let batM = null;
+  if (o.bat) { batM = new T.Group(); g.add(batM);
+    mesh(batM, p3Geo("bat", () => p3Lathe([[.001, -.065], [.026, -.06], [.026, -.048], [.016, -.04], [.014, .05], [.015, .3], [.022, .48], [.03, .62], [.034, .74], [.034, .79], [.02, .805], [.001, .81]], 16)), M(o.batC || 0xc4935a, { roughness: .42 })); }
+  head.traverse(m => { if (m.isMesh && !/^(head|helm|cap)$/.test(m.geometry.__k)) m.castShadow = false; });   // 臉上小零件不投影，省效能
+  return { g, hips, spine, chest, head, arm, leg, batM, ball, own };
+}
+
+/* ---------- IK ---------- */
+function p3Basis(dn, ref) { const T = THREE, y = dn.clone().negate(), z = ref.clone().addScaledVector(y, -ref.dot(y)).normalize(), x = new T.Vector3().crossVectors(y, z); return new T.Quaternion().setFromRotationMatrix(new T.Matrix4().makeBasis(x, y, z)); }
+function p3IK(up, mid, a, b, tgt, pole) {
+  const T = THREE, S = new T.Vector3().setFromMatrixPosition(up.matrixWorld);
+  const d = tgt.clone().sub(S), L = clamp(d.length(), Math.abs(a - b) + .01, a + b - .002), dir = d.normalize();
+  const ca = clamp((a * a + L * L - b * b) / (2 * a * L), -1, 1), sa = Math.sqrt(1 - ca * ca);
+  const perp = pole.clone().addScaledVector(dir, -pole.dot(dir)); if (perp.lengthSq() < 1e-6) perp.set(0, 0, 1).addScaledVector(dir, -dir.z); perp.normalize();
+  const u = dir.clone().multiplyScalar(ca).addScaledVector(perp, sa);
+  const E = S.clone().addScaledVector(u, a), fd = S.clone().addScaledVector(dir, L).sub(E).normalize();
+  const pq = up.parent.getWorldQuaternion(new T.Quaternion()), qu = p3Basis(u, perp), ql = p3Basis(fd, perp);
+  up.quaternion.copy(pq.invert().multiply(qu)); mid.quaternion.copy(qu.clone().invert().multiply(ql));
+  up.updateMatrixWorld(true);
+}
+
+/* ---------- 姿勢 ---------- */
+// 所有座標都在球員自己的座標系：面向 +z、左手邊 +x；手腳位置是目標點（IK 去對）
+const P3D = { hx: 0, hy: .95, hz: 0, hp: 0, hyaw: 0, hr: 0, sp: 0, sy: 0, sr: 0, cp: 0, cy: 0, cr: 0, np: 0, look: 0, ball: 0,
+  lwx: .24, lwy: .8, lwz: .04, rwx: -.24, rwy: .8, rwz: .04, lfx: .11, lfy: 0, lfz: .02, rfx: -.11, rfy: 0, rfz: .02, lfa: 0, rfa: 0,
+  lpx: .5, lpy: -.2, lpz: -.8, rpx: -.5, rpy: -.2, rpz: -.8, lkp: 0, rkp: 0 };
+function p3K(t, o) { const r = { t }; for (const k in o) { const v = o[k]; if (Array.isArray(v)) { const pre = k === "H" ? "bh" : k === "D" ? "bd" : k; r[pre + "x"] = v[0]; r[pre + "y"] = v[1]; r[pre + "z"] = v[2]; } else r[k] = v; } return r; }
+function p3Mk(frames, o) { let prev = Object.assign({}, P3D); const fr = frames.map(f => (prev = Object.assign({}, prev, f))); return { fr, dur: fr[fr.length - 1].t, loop: !!(o && o.loop) }; }
+function p3At(c, t) {
+  const F = c.fr, n = F.length; if (n === 1 || t <= F[0].t) return F[0]; if (t >= F[n - 1].t) return F[n - 1];
+  let i = 0; while (i < n - 2 && t >= F[i + 1].t) i++;
+  const a = F[i - 1] || F[i], b = F[i], d = F[i + 1], e = F[i + 2] || d, s = (t - b.t) / (d.t - b.t), s2 = s * s, s3 = s2 * s, o = {};
+  for (const k in b) { if (k === "t") continue; const p1 = b[k], p0 = a[k] == null ? p1 : a[k], p2 = d[k] == null ? p1 : d[k], p3 = e[k] == null ? p2 : e[k];
+    o[k] = .5 * (2 * p1 + (-p0 + p2) * s + (2 * p0 - 5 * p1 + 4 * p2 - p3) * s2 + (-p0 + 3 * p1 - 3 * p2 + p3) * s3); }
+  return o;
+}
+const P3NEG = /^(hx|hyaw|hr|sy|sr|cy|cr|look|bhx|bdx|[lr](wx|fx|px|kp|fa))$/;
+function p3Fin(p, f) {
+  if (p.bhx != null) { const l = Math.hypot(p.bdx, p.bdy, p.bdz) || 1;   // 下手握在棒頭、上手往棒身 9 公分
+    p = Object.assign({}, p, { lwx: p.bhx, lwy: p.bhy, lwz: p.bhz, rwx: p.bhx + p.bdx / l * .09, rwy: p.bhy + p.bdy / l * .09, rwz: p.bhz + p.bdz / l * .09 }); }
+  if (!f.mir) return p;
+  const o = {}; for (const k in p) { let kk = k; if (/^[lr](w|f|p|kp|fa)[xyz]?$/.test(k)) kk = (k[0] === "l" ? "r" : "l") + k.slice(1); o[kk] = P3NEG.test(kk) ? -p[k] : p[k]; }
+  return o;
+}
+function p3Apply(f, p) {
+  const T = THREE, V = T.Vector3;
+  f.hips.position.set(p.hx, p.hy, p.hz); f.hips.rotation.set(p.hp, p.hyaw, p.hr);
+  f.spine.rotation.set(p.sp, p.sy, p.sr); f.chest.rotation.set(p.cp, p.cy, p.cr);
+  f.head.rotation.set(p.np, clamp(p.look - p.hyaw - p.sy - p.cy, -1.5, 1.5), 0);
+  if (f.ball) f.ball.visible = p.ball > .5;
+  if (f.batM) { const on = p.bhx != null && !f.batDrop; f.batM.visible = on; if (on) { f.batM.position.set(p.bhx, p.bhy, p.bhz); f.batM.quaternion.setFromUnitVectors(P3UP, new V(p.bdx, p.bdy, p.bdz).normalize()); } }
+  f.g.updateMatrixWorld(true);
+  const gq = f.g.getWorldQuaternion(new T.Quaternion()), W = (x, y, z) => f.g.localToWorld(new V(x, y, z)), Dv = (x, y, z) => new V(x, y, z).applyQuaternion(gq);
+  for (const s of "lr") {
+    const L = f.leg[s], yaw = p.hyaw + p[s + "kp"];
+    p3IK(L.u, L.k, .43, .42, W(p[s + "fx"], p[s + "fy"] + .07, p[s + "fz"]), Dv(Math.sin(yaw), .05, Math.cos(yaw)));
+    const kq = L.k.getWorldQuaternion(new T.Quaternion()).invert();
+    L.a.quaternion.copy(kq.multiply(gq.clone().multiply(new T.Quaternion().setFromAxisAngle(P3UP, p.hyaw * .7 + p[s + "fa"]))));
+    const A = f.arm[s]; p3IK(A.u, A.e, .29, .27, W(p[s + "wx"], p[s + "wy"], p[s + "wz"]), Dv(p[s + "px"], p[s + "py"], p[s + "pz"]).normalize());
+  }
+}
+
+/* ---------- 動作片段 ---------- */
+// 打者（右打；左打自動鏡像）
+const P3S0 = { hy: .86, sp: .2, cy: -.25, look: 1.35, np: .05, lf: [.36, 0, .03], rf: [-.36, 0, -.02], H: [-.14, 1.34, .12], D: [-.35, .85, -.38], lp: [.2, -1, -.1], rp: [-.6, -.2, -.5] };
+const P3LE = { ...P3S0, hx: 0, hy: .84, lf: [.5, 0, .05], H: [-.22, 1.36, .06], D: [-.5, .8, -.3], cy: -.42 };
+// 投手（右投）
+const P3PS = { hy: .93, hyaw: -1.45, look: 0, np: .05, lf: [0, 0, .3], rf: [0, 0, -.15], lw: [-.25, 1.17, .1], rw: [-.25, 1.15, .01], lp: [.2, -1, .3], rp: [.2, -1, -.3], ball: 1 };
+const P3PR = { ...P3PS, lf: [.06, 0, 1.12], rf: [0, .07, 0], rfa: -.3, hy: .78, hz: .68, hyaw: .08, cy: .35, sp: .45, rw: [-.5, 1.7, 1.14], lw: [.2, 1.1, .75], rp: [-1, .3, 0], lp: [.4, -1, 0] };
+// 野手
+const P3RD = { hy: .8, sp: .38, lf: [.3, 0, .05], rf: [-.3, 0, .05], lw: [.2, .8, .4], rw: [-.2, .8, .4], np: -.35, lp: [.6, -.3, -.5], rp: [-.6, -.3, -.5], lkp: .25, rkp: -.25 };
+const P3CR = { hy: .5, sp: .3, lf: [.34, 0, .1], rf: [-.34, 0, .1], lkp: .6, rkp: -.6, lfa: .4, rfa: -.4, lw: [.12, .95, .55], rw: [-.2, .65, .2], np: -.1, lp: [.8, -.4, 0], rp: [-.8, -.4, 0] };
+const P3UM = { hy: .8, sp: .55, lf: [.3, 0, 0], rf: [-.3, 0, 0], lw: [.25, .66, .3], rw: [-.25, .66, .3], np: -.45, lkp: .3, rkp: -.3 };
+const P3C = {
+  stance: () => p3Mk([p3K(0, P3S0), p3K(.9, { hy: .85, H: [-.12, 1.36, .15], D: [-.24, .9, -.36] }), p3K(1.8, { hy: .86, H: P3S0.H, D: P3S0.D })], { loop: 1 }),
+  load: () => p3Mk([p3K(0, P3S0), p3K(.45, { hx: -.07, hy: .87, lf: [.28, .13, .02], H: [-.24, 1.38, .05], D: [-.45, .82, -.36], cy: -.42 }),
+    p3K(.85, { hx: -.02, lf: [.48, .03, .05], cy: -.45 }), p3K(P3W, P3LE), p3K(1.8, {})]),
+  set: () => p3Mk([p3K(0, P3PS), p3K(1.2, { hy: .925, sp: .03 }), p3K(2.4, { hy: .93, sp: 0 })], { loop: 1 }),
+  windup: () => p3Mk([p3K(0, P3PS),
+    p3K(.38, { lf: [-.08, .5, .03], hy: .97, hyaw: -1.6, sp: -.07, lw: [-.22, 1.3, .07], rw: [-.22, 1.28, -.02] }),
+    p3K(.6, { lf: [0, .22, .55], hy: .9, hz: .12, hyaw: -1.5, sp: 0, lw: [-.12, 1.32, .42], rw: [.08, 1.02, -.36], rp: [.3, -.4, -1] }),
+    p3K(.82, { lf: [.06, 0, 1.12], rf: [0, 0, -.1], rfa: -.3, hy: .8, hz: .47, hyaw: -.95, cy: -.3, sp: .06, lw: [.05, 1.42, .98], rw: [-.12, 1.63, -.2], rp: [-.4, .4, -1], lp: [.5, -.6, 0] }),
+    p3K(P3W, P3PR)]),
+  follow: () => p3Mk([p3K(0, { ...P3PR, ball: 0 }),
+    p3K(.15, { rw: [.28, .62, 1.2], sp: .8, hyaw: .3, cy: .45, hy: .74, rf: [-.05, .35, .35], lw: [.22, 1, .6] }),
+    p3K(.45, { rf: [-.32, 0, .95], hy: .86, hz: .72, sp: .3, hyaw: 0, cy: 0, lw: [.16, 1, 1.08], rw: [-.16, 1, 1.08], lf: [.24, 0, 1.06], rp: [-.4, -.4, -.8], lp: [.4, -.4, -.8] }),
+    p3K(1.1, {})]),
+  ready: () => p3Mk([p3K(0, P3RD), p3K(1.1, { hy: .79, sp: .41 }), p3K(2.2, { hy: .8, sp: .38 })], { loop: 1 }),
+  crouch: () => p3Mk([p3K(0, P3CR), p3K(1.3, { hy: .49, sp: .32 }), p3K(2.6, { hy: .5, sp: .3 })], { loop: 1 }),
+  ump: () => p3Mk([p3K(0, P3UM), p3K(1.5, { hy: .79 }), p3K(3, { hy: .8 })], { loop: 1 }),
+};
+function p3SwingF(h) {
+  const hc = clamp(.9 + (h - .78) * .45, .8, 1.12), dr = clamp((hc - h) / .72, -.35, .85);
+  return p3Mk([p3K(0, P3LE),
+    p3K(.05, { H: [-.1, 1.18, .2], D: [-.88, .3, -.2], hyaw: .3, cy: -.15, hx: .04 }),
+    p3K(.1, { H: [.1, hc, .37], D: [0, -dr, 1], hyaw: .85, cy: .25, sp: .3, rf: [-.32, .04, 0], rfa: .8, look: 1.3 }),
+    p3K(.16, { H: [.33, hc + .05, .3], D: [.88, .05, .45], hyaw: 1.05, cy: .45 }),
+    p3K(.3, { H: [.3, 1.32, .08], D: [.25, .45, -.85], hyaw: 1.2, cy: .6, sp: .2 }),
+    p3K(.5, { H: [.14, 1.46, -.05], D: [-.5, .25, -.82], hyaw: 1.25, cy: .68, sp: .15, look: 1 }),
+    p3K(1, {})]);
+}
+function p3CatchF(h) {
+  const X = h > 5 ? { hy: .95, sp: .05, lw: [.14, 1.95, .35], rw: [-.15, 1.4, .3], np: -.7 } : { hy: .62, sp: .9, lw: [.1, .15, .6], rw: [-.1, .25, .55], lf: [.3, 0, .1], rf: [-.3, 0, -.1], np: .2 };
+  return p3Mk([p3K(0, P3RD), p3K(.25, X), p3K(.6, X)]);
+}
+function p3RunF(t) {
+  const ph = t * Math.PI * 2 * 1.55, s = Math.sin(ph), c = Math.cos(ph);
+  return Object.assign({}, P3D, { hy: .9 + Math.abs(c) * .05, sp: .3, cy: -.18 * c, hyaw: .1 * c, look: 0, np: -.15,
+    lfx: .11, lfy: Math.max(0, -s) * .34, lfz: c * .45 + .05, rfx: -.11, rfy: Math.max(0, s) * .34, rfz: -c * .45 + .05,
+    lwx: .24, lwy: 1.02, lwz: -c * .32 + .12, rwx: -.24, rwy: 1.02, rwz: c * .32 + .12, lpx: .3, lpy: -.3, lpz: -1, rpx: -.3, rpy: -.3, rpz: -1 });
+}
+function p3Clip(f, name, o) {
+  if (name === "run") return { dur: 99, loop: 1, fn: p3RunF };
+  if (name === "swing") return p3SwingF(o.h);
+  if (name === "catch") return p3CatchF(f.catchH || 0);
+  return P3C[name]();
+}
+function p3Play(f, name, o) {
+  if (!f) return; o = o || {};
+  const c = p3Clip(f, name, o); c.name = name;
+  f.from = f.cur ? Object.assign({}, f.cur) : null; f.clip = c; f.t0 = performance.now(); f.bl = o.blend == null ? .15 : o.blend; f.next = o.next || null;
+}
+function p3TickF(f, now) {
+  const c = f.clip; if (!c) return;
+  let t = (now - f.t0) / 1000;
+  if (t > c.dur) { if (c.loop) t %= c.dur; else if (f.next) { p3Play(f, f.next, { blend: f.next === "set" ? 1 : .45 }); return p3TickF(f, now); } else t = c.dur; }
+  let p = p3Fin(c.fn ? c.fn(t, f) : p3At(c, t), f);
+  const b = f.bl > 0 && f.from ? (now - f.t0) / 1000 / f.bl : 1;
+  if (b < 1) { const s = b * b * (3 - 2 * b), q = {}; for (const k in p) { const a = f.from[k]; q[k] = a == null ? p[k] : a + (p[k] - a) * s; } p = q; }
+  f.cur = p; p3Apply(f, p);
+}
+function p3Tick(P, now) { P.figs.forEach(f => p3TickF(f, now)); }
+function p3Pose(f, k) {
+  if (!f) return;
+  const nm = k === "run" ? "run" : k === "stance" ? "stance" : k === "idle" ? (f.role === "P" || f.role === "B" ? null : f.catchH != null ? "catch" : "ready") : null;
+  if (nm && (!f.clip || f.clip.name !== nm)) p3Play(f, nm, { blend: nm === "run" ? .2 : .25 });
+}
+
+/* ---------- 上場 ---------- */
+function p3Cast(P) {
+  const T = THREE;
+  P.figs.forEach(f => { P.sc.remove(f.g); (f.own || []).forEach(x => x.dispose()); }); P.figs = [];
+  const bs = batSide(), fs = fldSide(), b = curB(), p = curP(), pl = (p.throws || "R") === "L", bt = b.bats || "R", lh = bt === "L" || (bt === "S" && !pl);
+  const tc = s => TEAMS[s.tid] ? TEAMS[s.tid].c : (s.c || "#c8102e");
+  const add = (f, x, z, ry, clip) => { f.g.position.set(x, 0, z); f.g.rotation.y = ry || 0; P.sc.add(f.g); P.figs.push(f); p3Play(f, clip, { blend: 0 }); return f; };
+  const mk = (s, o) => p3Fig({ c: tc(s), ab: s.ab, ...o });
+  P.bat = mk(bs, { bat: 1, helmet: lh ? -1 : 1, num: p3Num(b.n), skin: p3Skin(b.n), batC: p3Hash(b.n) % 3 ? 0xc4935a : 0x24201d });
+  P.bat.lh = lh; P.bat.mir = lh; P.bat.role = "B";
+  add(P.bat, lh ? 1.05 : -1.05, .3, lh ? -Math.PI / 2 - .12 : Math.PI / 2 + .12, "stance");
+  P.pit = mk(fs, { glove: pl ? "r" : "l", ball: pl ? "l" : "r", num: p3Num(p.n), skin: p3Skin(p.n) });
+  P.pit.lefty = pl; P.pit.mir = pl; P.pit.role = "P";
+  add(P.pit, 0, -18.44, 0, "set"); P.pit.g.position.y = .25;
+  P.cat = add(mk(fs, { glove: "l", catcher: 1, helmet: 1, cap: 0x222222 }), 0, 1.2, Math.PI, "crouch");
+  P.ump = add(p3Fig({ c: 0x1f2a3d, c2: 0x111111, pants: 0x4b4f57, cap: 0x111111 }), .25, 2.05, Math.PI, "ump");
+  P.fld = {};
+  ["1B", "2B", "SS", "3B", "LF", "CF", "RF"].forEach(k => { const [x, z] = FPOS[k]; P.fld[k] = add(mk(fs, { glove: "l", num: p3Num(k + fs.ab), skin: p3Skin(k + fs.ab) }), x, z, Math.atan2(-x, -z), "ready"); });
+  P.run = G.bases.map((r, i) => r ? add(mk(bs, { helmet: 1, skin: p3Skin("r" + i) }), BASEP[i][0] + (i === 1 ? 0 : -1.2 * Math.sign(BASEP[i][0])), BASEP[i][1] + 1, Math.atan2(-BASEP[i][0], -BASEP[i][1]), "ready") : null);
+  P.cat.g.visible = P.ump.g.visible = false;
+  p3Tick(P, performance.now());
+}
 </script>
 
 <script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script></body></html>
